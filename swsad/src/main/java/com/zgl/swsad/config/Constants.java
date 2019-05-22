@@ -17,4 +17,9 @@ public class Constants {
      */
     public static final String AUTHORIZATION = "authorization";
 
+    /**
+     *  存放图片的目录
+     */
+    public static final String IMAGEPATH = "images/";
+
 }
