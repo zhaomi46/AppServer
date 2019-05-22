@@ -13,7 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import sun.rmi.runtime.Log;
+
 
 
 @RestController
@@ -69,7 +69,6 @@ public class UserController {
 
         if(oldUser != null)
             return new ResponseEntity(new ReturnMsg("userName existed"), HttpStatus.CONFLICT);
-
 
         int opNum = userService.insertUser(user);
         if(opNum == 1)
