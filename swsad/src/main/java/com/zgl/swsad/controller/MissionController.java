@@ -115,7 +115,7 @@ public class MissionController {
 
     @CrossOrigin
     @Authorization
-    @RequestMapping(value="/missions/{missionID}/tasks", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @RequestMapping(value="/missions/{missionId}/tasks", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public Object selectTasksByMissionId(@PathVariable int missionId, @CurrentUser User currentUser) {
         Mission mission = missionService.selectMission(missionId);
         if (mission == null) {
