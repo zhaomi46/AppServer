@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
     @Autowired
     private UserService userService;
-
     /**
      * 根据userId查询用户信息
      * 获取用户之前必须要已经登录
