@@ -15,7 +15,7 @@ public class Mission {
         return missionId;
     }
 
-    public void setMissionId(Integer missionId) {
+    public void setMissionId(int missionId) {
         this.missionId = missionId;
     }
 
