@@ -22,4 +22,6 @@ public class Constants {
      */
     public static final String IMAGEPATH = "images/";
 
+    public static final int INSERT_FAIL = -1;
+
 }

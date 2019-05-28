@@ -1,9 +1,12 @@
 package com.zgl.swsad.service;
 
 import com.zgl.swsad.mapper.TaskMapper;
+import com.zgl.swsad.model.Mission;
 import com.zgl.swsad.model.Task;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
 
 @Service
 public class TaskService {
@@ -19,7 +22,7 @@ public class TaskService {
     }
 
     //用户通过自己的ID来获得自己接收的任务
-    public Task selectTaskByAccUserID(int accUserId)
+    public ArrayList<Task> selectTaskByAccUserID(int accUserId)
     {
         return taskMapper.selectTaskByAccUserId(accUserId);
     }
