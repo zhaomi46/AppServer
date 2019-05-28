@@ -2,7 +2,10 @@ package com.zgl.swsad.controller;
 
 import com.zgl.swsad.authorization.annotation.Authorization;
 import com.zgl.swsad.authorization.annotation.CurrentUser;
+import com.zgl.swsad.model.Task;
 import com.zgl.swsad.model.User;
+import com.zgl.swsad.service.MissionService;
+import com.zgl.swsad.service.TaskService;
 import com.zgl.swsad.service.UserService;
 import com.zgl.swsad.util.ReturnMsg;
 import org.apache.ibatis.jdbc.Null;
@@ -13,7 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import sun.rmi.runtime.Log;
 
 
 @RestController
@@ -23,6 +25,12 @@ import sun.rmi.runtime.Log;
 public class UserController {
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private TaskService taskService;
+
+//    @Autowired
+//    private MissionService missionService;
 
     /**
      * 根据userId查询用户信息
@@ -115,4 +123,41 @@ public class UserController {
         return userService.deleteUser(id);
     }
     */
+
+//    @CrossOrigin
+//    @Authorization
+//    @RequestMapping(value = "/users/{id}/missions", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+//    public Object getAllMissionByUserId(@PathVariable int userId)
+//    {
+//        User user = userService.selectUser(userId);
+//        if (user == null) {
+//            return new ResponseEntity(new ReturnMsg("Invalid id supplied"), HttpStatus.BAD_REQUEST);
+//        }
+//
+//        Mission mission = missionService.selectMissionByAccUserID(userId);
+//
+//        if (mission == null) {
+//            return new ResponseEntity(new ReturnMsg("User not found"), HttpStatus.NOT_FOUND);
+//        }
+//
+//        return new ResponseEntity(task, HttpStatus.OK);
+//    }
+
+    @CrossOrigin
+    @Authorization
+    @RequestMapping(value = "/users/{id}/tasks", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public Object getAllTasksByUserId(@PathVariable int userId) {
+        User user = userService.selectUser(userId);
+        if (user == null) {
+            return new ResponseEntity(new ReturnMsg("Invalid id supplied"), HttpStatus.BAD_REQUEST);
+        }
+
+        Task task = taskService.selectTaskByAccUserID(userId);
+
+        if (task == null) {
+            return new ResponseEntity(new ReturnMsg("User not found"), HttpStatus.NOT_FOUND);
+        }
+
+        return new ResponseEntity(task, HttpStatus.OK);
+    }
 }

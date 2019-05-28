@@ -18,6 +18,12 @@ public class TaskService {
         return taskMapper.selectTask(id);
     }
 
+    //用户通过自己的ID来获得自己接收的任务
+    public Task selectTaskByAccUserID(int accUserId)
+    {
+        return taskMapper.selectTaskByAccUserId(accUserId);
+    }
+
     //调整某个任务
     public int updateTask(Task task) { return taskMapper.updateTask(task); }
 

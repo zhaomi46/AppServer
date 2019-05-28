@@ -21,6 +21,9 @@ public interface TaskMapper {
     @Select("SELECT * FROM task WHERE taskId = #{taskId}")
     Task selectTask(int id);
 
+    @Select("SELECT * FROM task WHERE accUserId = #{accUserId}")
+    Task selectTaskByAccUserId(int accUserId);
+
     @Delete("DELETE FROM task WHERE taskId = #{taskId}")
     int deleteTask(int id);
 
