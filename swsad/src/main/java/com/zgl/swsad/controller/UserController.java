@@ -13,7 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import sun.rmi.runtime.Log;
+
 
 
 @RestController
@@ -23,7 +23,6 @@ import sun.rmi.runtime.Log;
 public class UserController {
     @Autowired
     private UserService userService;
-
     /**
      * 根据userId查询用户信息
      * 获取用户之前必须要已经登录
@@ -69,7 +68,6 @@ public class UserController {
 
         if(oldUser != null)
             return new ResponseEntity(new ReturnMsg("userName existed"), HttpStatus.CONFLICT);
-
 
         int opNum = userService.insertUser(user);
         if(opNum == 1)
