@@ -27,4 +27,6 @@ public class Constants {
      */
     public static final String TOKEN_KEY= "swsad123456";
 
+    public static final int INSERT_FAIL = -1;
+
 }
