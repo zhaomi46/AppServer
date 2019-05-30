@@ -24,7 +24,7 @@ public class TokenController {
 
     @CrossOrigin
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<Object> login(@RequestParam String username, @RequestParam String password) {
+    public ResponseEntity<Object> login(@RequestParam String username, @RequestParam String password) throws Exception {
         Assert.notNull(username, "username can not be empty");
         Assert.notNull(password, "password can not be empty");
 
@@ -32,16 +32,16 @@ public class TokenController {
         if(user == null || !user.getPassword().equals(password))
             return new ResponseEntity("invlid username/password", HttpStatus.UNAUTHORIZED);
         //生成一个token，保存用户登录状态
-        TokenModel model = tokenManager.createToken(user.getUserId());
-        return new ResponseEntity(model, HttpStatus.OK);
+        String tokenString = tokenManager.createToken(user.getUserId().longValue(), true);
+        return new ResponseEntity(tokenString, HttpStatus.OK);
     }
 
     @CrossOrigin
     @RequestMapping(method = RequestMethod.DELETE)
     @Authorization
-    public ResponseEntity<Object> logout(@CurrentUser User user) {
-        tokenManager.deleteToken(user.getUserId().longValue());
-        return new ResponseEntity(HttpStatus.OK);
+    public ResponseEntity<Object> logout(@CurrentUser User user) throws Exception {
+        String tokenString = tokenManager.createToken(user.getUserId().longValue(), false);
+        return new ResponseEntity(tokenString, HttpStatus.OK);
     }
 
 }

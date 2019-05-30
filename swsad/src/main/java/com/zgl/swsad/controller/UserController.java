@@ -43,7 +43,7 @@ public class UserController {
             user.setPassword("");
             user.setBalance(0);
 
-        return new ResponseEntity(user, HttpStatus.NOT_FOUND);
+        return new ResponseEntity(user, HttpStatus.OK);
 
     }
 
