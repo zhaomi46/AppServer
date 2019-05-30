@@ -22,4 +22,9 @@ public class Constants {
      */
     public static final String IMAGEPATH = "images/";
 
+    /**
+     * sha256密钥
+     */
+    public static final String TOKEN_KEY= "swsad123456";
+
 }
