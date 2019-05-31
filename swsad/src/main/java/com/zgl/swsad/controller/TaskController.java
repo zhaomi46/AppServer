@@ -110,7 +110,7 @@ public class TaskController {
         if(task == null)
             return new ResponseEntity(new ReturnMsg("invalid taskId"), HttpStatus.NOT_FOUND);
 
-        return new ResponseEntity(task,HttpStatus.NOT_FOUND);
+        return new ResponseEntity(task,HttpStatus.OK);
     }
 
     //通过id修改task

@@ -22,6 +22,10 @@ public class MissionService {
         return missionMapper.selectMission(missionId);
     }
 
+    public   ArrayList<Mission> selectMissionByUserId(int userId) {
+        return missionMapper.selectMissionByUserId(userId);
+    }
+
     public ArrayList<Mission> selectAllMissions() {
         return missionMapper.selectAllMissions();
     }

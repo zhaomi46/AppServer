@@ -24,7 +24,7 @@ public interface UserMapper {
 
     /**
      * 添加新用户
-     * @param User 实例
+     * @param user 实例
      * @return 成功操作的记录数目
      */
     @Insert("INSERT INTO user (userType, name, avator, nickName, age, sex, grade, major, mailAddr, phoneNum, creditVal, " +

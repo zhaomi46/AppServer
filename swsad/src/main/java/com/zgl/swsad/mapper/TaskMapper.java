@@ -7,6 +7,8 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
+
 @Repository
 public interface TaskMapper {
 
@@ -20,6 +22,9 @@ public interface TaskMapper {
 
     @Select("SELECT * FROM task WHERE taskId = #{taskId}")
     Task selectTask(int id);
+
+    @Select("SELECT * FROM task WHERE accUserId = #{accUserId}")
+    ArrayList<Task> selectTaskByAccUserId(int accUserId);
 
     @Delete("DELETE FROM task WHERE taskId = #{taskId}")
     int deleteTask(int id);
