@@ -1,16 +1,14 @@
 package com.zgl.swsad.mapper;
 
 import com.zgl.swsad.model.Errand;
-import org.apache.ibatis.annotations.Delete;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ErrandMapper {
     @Insert("INSERT INTO errand (description, taskId)" +
             " Values(#{description}, #{taskId})")
+    @Options(useGeneratedKeys = true, keyProperty = "errandId")
     int insertErrand(Errand errand);
 
     @Update("UPDATE errand set description=#{description}, taskId=#{taskId} where errandId=#{errandId}")
