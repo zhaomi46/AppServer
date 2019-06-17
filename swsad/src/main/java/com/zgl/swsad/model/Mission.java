@@ -9,7 +9,15 @@ public class Mission {
     private String tags;
     private Integer money;
     private Integer userId;
+    private Integer taskNum;
 
+    public Integer getTaskNum() {
+        return taskNum;
+    }
+
+    public void setTaskNum(Integer taskNum) {
+        this.taskNum = taskNum;
+    }
 
     public Integer getMissionId() {
         return missionId;

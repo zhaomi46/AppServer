@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.databind.util.JSONPObject;
 import com.zgl.swsad.authorization.annotation.Authorization;
 import com.zgl.swsad.authorization.annotation.CurrentUser;
+import com.zgl.swsad.config.Constants;
 import com.zgl.swsad.model.*;
 import com.zgl.swsad.service.*;
 import com.zgl.swsad.util.ReturnMsg;
@@ -20,8 +21,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-
-
 @RestController
 public class TaskController {
 
@@ -35,71 +34,92 @@ public class TaskController {
     private ErrandService errandService;
 
     //创建问卷型任务
+    @CrossOrigin
+    @Authorization
     @RequestMapping(value = "/tasks/questionares",method = RequestMethod.POST)
-    public Object create_questionare_task(@RequestBody JSONObject param){
+    public Object create_questionare_task(@RequestBody JSONObject param,@CurrentUser User currentUser){
         JSONObject task_json = param.getJSONObject("task");
+        if(task_json.get("pubUserId") != currentUser.getUserId())
+        {
+            return new ResponseEntity(new ReturnMsg("PubUserId invalid !"),HttpStatus.UNAUTHORIZED);
+        }
         JSONObject questionare_json = param.getJSONObject("questionare");
         JSONArray questions_json =  questionare_json.getJSONArray("questions");
-        int count = 0;
-        int num = 2 + questionare_json.size() - 3;
+        //int count = 0;
+        //int num =  questionare_json.size() - 3;
         //注意这里的questionare_size得到的长度不是以JsonObject作为单位，而是以键值对作为单位,所以还要加上前面的3个键值对
 
         Task task = (Task)JSONObject.toJavaObject(task_json,Task.class);
         int opNum1 = taskService.insertTask(task);
-        if(opNum1 == 1){
-            count++;
+        if(opNum1 != Constants.INSERT_FAIL){
+            //count++;
+            questionare_json.put("taskId",opNum1);
         }
-
+        else
+        {
+            return new ResponseEntity(new ReturnMsg("Task creat fail !"),HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         Questionare questionare = (Questionare)JSONObject.toJavaObject(questionare_json,Questionare.class);
         int opNum2 = questionareService.insertQuestionare(questionare);
-
-        System.out.println(opNum2);
-        if( opNum2 == 1){
-            count++;
+        if( opNum2 == Constants.INSERT_FAIL){
+            //count++;
+            return new ResponseEntity(new ReturnMsg("Questionare creat fail !"),HttpStatus.INTERNAL_SERVER_ERROR);
         }
-//System.out.println(questions_json);
         for(int i = 0; i < questions_json.size(); i++){
             JSONObject question_json = (JSONObject)questions_json.getJSONObject(i); //这里不能是get(i),get(i)只会得到键值对
+            question_json.put("questionareId",opNum2);
             Question question = (Question)JSONObject.toJavaObject(question_json,Question.class);
             int opNum3 = questionService.insertQuestion(question);
-            if( opNum3 == 1 ){
-                count++;
+            if( opNum3 != 1 ){
+                //count++;
+                return new ResponseEntity(new ReturnMsg("Some questions creat fail !"),HttpStatus.INTERNAL_SERVER_ERROR);
             }
        }
         //System.out.println("数组长度" + questions_json.size());
         //System.out.println("num" + questionare_json.size());
 
-        if( count == num){
-            return new ResponseEntity(new ReturnMsg("create task successfully!"), HttpStatus.OK);
-        }
-        return new ResponseEntity(new ReturnMsg("server error"),HttpStatus.INTERNAL_SERVER_ERROR);
+//        if( count == num){
+//            return new ResponseEntity(new ReturnMsg("create task successfully!"), HttpStatus.OK);
+//        }
+//        System.out.println("count:"+count);
+//        System.out.println("num:"+num);
+//        return new ResponseEntity(new ReturnMsg("server error"),HttpStatus.INTERNAL_SERVER_ERROR);
         //return questions_json.toJSONString();
+        return new ResponseEntity(new ReturnMsg("create task successfully!"), HttpStatus.OK);
     }
 
     //创建跑腿型任务
+    @CrossOrigin
+    @Authorization
     @RequestMapping(value = "/tasks/errands", method = RequestMethod.POST)
-    public Object create_errand_task(@RequestBody JSONObject param){
+    public Object create_errand_task(@RequestBody JSONObject param,@CurrentUser User currentUser){
 
         JSONObject task_json = param.getJSONObject("task");
+        if(task_json.get("pubUserId") != currentUser.getUserId())
+        {
+            return new ResponseEntity(new ReturnMsg("PubUserId invalid !"),HttpStatus.UNAUTHORIZED);
+        }
         JSONObject errand_json = param.getJSONObject("errand");
         int count = 0;
 
         Task task = (Task)JSONObject.toJavaObject(task_json,Task.class);
         int opNum1 = taskService.insertTask(task);
-        if( opNum1 == 1 ){
-            count++;
+        if( opNum1 == Constants.INSERT_FAIL ){
+            return new ResponseEntity(new ReturnMsg("Task creat fail !"),HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        else
+        {
+            errand_json.put("taskId",opNum1);
         }
 
         Errand errand = (Errand)JSONObject.toJavaObject(errand_json,Errand.class);
         int opNum2 = errandService.insertErrand(errand);
-        if( opNum2 == 1 ){
-            count++;
+        if( opNum2 == Constants.INSERT_FAIL  ){
+            return new ResponseEntity(new ReturnMsg("Errand creat fail !"),HttpStatus.INTERNAL_SERVER_ERROR);
         }
-
-        if( count == 2 ){
+        else
             return new ResponseEntity(new ReturnMsg("create task successfully!"), HttpStatus.OK);
-        }
-        return new ResponseEntity(new ReturnMsg("server error"),HttpStatus.INTERNAL_SERVER_ERROR);
+
 
     }
 
@@ -132,16 +152,19 @@ public class TaskController {
             }
             return new ResponseEntity(new ReturnMsg("server error"),HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return new ResponseEntity(new ReturnMsg("invalid, this is not your task"),HttpStatus.BAD_REQUEST);
+        return new ResponseEntity(new ReturnMsg("invalid, this is not your task"),HttpStatus.UNAUTHORIZED);
     }
 
     //通过id删除task
     @CrossOrigin
     @Authorization
     @RequestMapping(value = "/tasks/{taskID}",method = RequestMethod.DELETE,produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public Object deleteTask (@PathVariable int taskID )
+    public Object deleteTask (@PathVariable int taskID, @CurrentUser User currentUser )
     {
-
+        if(currentUser.getUserId() != taskService.selectTask(taskID).getPubUserId())
+        {
+            return new ResponseEntity(new ReturnMsg("invalid operation, not your task"),HttpStatus.UNAUTHORIZED);
+        }
         int opNum =  taskService.deleteTask(taskID);
         if(opNum == 1)
         {
@@ -156,7 +179,7 @@ public class TaskController {
     @CrossOrigin
     @Authorization
     @RequestMapping(value = "/tasks/{taskID}/questionares", method = RequestMethod.GET,produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public Object getQuestionareByTaskId(@PathVariable int taskID){
+    public String getQuestionareByTaskId(@PathVariable int taskID){
 
         Questionare questionare = questionareService.selectQuestionareByTaskID(taskID);
         String questionare_str = JSONObject.toJSONString(questionare);
@@ -167,8 +190,7 @@ public class TaskController {
         StringBuilder temp = new StringBuilder(questionare_str);
         temp.insert(questionare_str.length()-1,str);
         String Str = temp.toString();
-        JSONObject ReturnJson = JSON.parseObject(Str);
-        return ReturnJson;
+        return Str;
 
     }
 
