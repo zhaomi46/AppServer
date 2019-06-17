@@ -1,14 +1,12 @@
 package com.zgl.swsad.mapper;
 
 import com.zgl.swsad.model.Questionare;
-import org.apache.ibatis.annotations.Delete;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.annotations.*;
 
 public interface QuestionareMapper {
     @Insert("INSERT INTO questionare (taskId, questionNum)" +
             " Values(#{taskId}, #{questionNum} )")
+    @Options(useGeneratedKeys = true, keyProperty = "questionareId")
     int insertQuestionare(Questionare questionare);
 
     @Update("UPDATE questionare set  questionNum=#{questionNum} where taskId=#{taskId}")
