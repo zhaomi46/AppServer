@@ -20,6 +20,9 @@ public interface MissionMapper {
     @Select("SELECT * FROM mission WHERE missionId = #{missionId}")
     Mission selectMission(int missionId);
 
+    @Select("SELECT * FROM mission WHERE userId = #{userId}")
+    ArrayList<Mission> selectMissionByUserId(int userId);
+
     @Update("UPDATE mission " +
             "SET publishTime = #{publishTime}, missionStatus = #{missionStatus}, title = #{title}, deadLine = #{deadLine}, tags = #{tags}, money = #{money}, userId = #{userId} " +
             "WHERE missionId = #{missionId}")
