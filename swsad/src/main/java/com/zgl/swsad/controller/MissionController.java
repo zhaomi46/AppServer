@@ -183,8 +183,8 @@ public class MissionController {
         ArrayList<Question> Answers = questionService.selectQuestionByQuestionareID(QuesList.get(0).getQuestionareId());
 
         //初始化格式
-        ReSum.put("QA-title",QuesList.get(0).getTitle());
-        ReSum.put("QA-des",QuesList.get(0).getDescription());
+        ReSum.put("QATitle",QuesList.get(0).getTitle());
+        ReSum.put("QADes",QuesList.get(0).getDescription());
 
         if(QuesList != null)
         {
