@@ -1,5 +1,6 @@
 package com.zgl.swsad.service;
 
+import com.zgl.swsad.config.Constants;
 import com.zgl.swsad.mapper.ErrandMapper;
 import com.zgl.swsad.model.Errand;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +11,10 @@ public class ErrandService {
     @Autowired
     ErrandMapper errandMapper;
     //新建
-    public int insertErrand(Errand errand){return errandMapper.insertErrand(errand);}
+    public int insertErrand(Errand errand){
+        int reNum = errandMapper.insertErrand(errand);
+        return reNum == 0 ? Constants.INSERT_FAIL : errand.getErrandId();
+    }
 
     //获取
     public  Errand selectErrand(int id){return errandMapper.selectErrand(id);}

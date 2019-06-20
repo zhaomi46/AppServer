@@ -1,12 +1,11 @@
 package com.zgl.swsad.controller;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.zgl.swsad.authorization.annotation.Authorization;
 import com.zgl.swsad.authorization.annotation.CurrentUser;
-import com.zgl.swsad.model.Mission;
-import com.zgl.swsad.model.Task;
-import com.zgl.swsad.model.User;
-import com.zgl.swsad.service.MissionService;
-import com.zgl.swsad.service.UserService;
+import com.zgl.swsad.model.*;
+import com.zgl.swsad.service.*;
 import com.zgl.swsad.util.ReturnMsg;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,11 +15,19 @@ import org.springframework.web.bind.annotation.*;
 import com.zgl.swsad.config.Constants;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 
 @RestController
 public class MissionController {
     @Autowired
     MissionService missionService;
+    @Autowired
+    TaskService taskService;
+    @Autowired
+    QuestionareService questionareService;
+    @Autowired
+    QuestionService questionService;
 
     @Autowired
     private UserService userService;
@@ -131,6 +138,104 @@ public class MissionController {
             return new ResponseEntity(tasks, HttpStatus.OK);
         }
         return new ResponseEntity(new ReturnMsg("Server error."), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+
+    @CrossOrigin
+    @Authorization
+    @RequestMapping(value="/missions/{missionId}/QAsummary", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public Object getMissionQASum (@PathVariable int missionId, @CurrentUser User currentUser)
+    {
+        Mission mission = missionService.selectMission(missionId);
+        if (mission == null) {
+            return new ResponseEntity(new ReturnMsg("Mission not found!"), HttpStatus.NOT_FOUND);
+        }
+
+        if (mission.getUserId() != currentUser.getUserId()) {
+            return new ResponseEntity(new ReturnMsg("Unauthorized, this Questionare are not yours."), HttpStatus.UNAUTHORIZED);
+        }
+
+        //返回的json对象
+        JSONObject ReSum = new JSONObject(new LinkedHashMap());
+        ReSum.put("missionId",missionId);
+        ReSum.put("taskNum",mission.getTaskNum());
+        ReSum.put("finishNum",0);
+
+        ArrayList<Task> tasks = missionService.selectTasksByMissionId(missionId);
+        //return new ResponseEntity(tasks,HttpStatus.OK);
+        int finishNum = 0;
+        ArrayList<Questionare> QuesList = new ArrayList<Questionare>();
+        //System.out.println("tasksize"+tasks.size()+"listsize"+QuesList.size());
+        if (tasks != null) {
+            for(int i=0; i < tasks.size();i++)
+            {
+                Task buff = tasks.get(i);
+                if(buff.getAccUserId() != null)
+                {
+                    finishNum++;
+                    System.out.println("xxx"+finishNum);
+                }
+                QuesList.add(questionareService.selectQuestionareByTaskID(buff.getTaskId()));
+
+            }
+
+        }
+        ArrayList<Question> Answers = questionService.selectQuestionByQuestionareID(QuesList.get(0).getQuestionareId());
+
+        //初始化格式
+        ReSum.put("QATitle",QuesList.get(0).getTitle());
+        ReSum.put("QADes",QuesList.get(0).getDescription());
+
+        if(QuesList != null)
+        {
+            for(int i=1; i < QuesList.size();i++)
+            {
+                Questionare Ques = QuesList.get(i);
+
+                ArrayList<Question> AnsSum = questionService.selectQuestionByQuestionareID(Ques.getQuestionareId());
+                for(int j=0;j < AnsSum.size();j++)
+                {
+                    Question QueBuff = AnsSum.get(j);
+                    //选择题
+                    if(QueBuff.getQuestionType() == 0 || QueBuff.getQuestionType() == 1)
+                    {
+                        Question AnsIndex = Answers.get(j);
+                        AnsIndex.setAnswer(AnsIndex.getAnswer()+QueBuff.getAnswer());
+                        Answers.set(j,AnsIndex);
+                    }
+
+
+                    //问答题
+                    if(QueBuff.getQuestionType() == 2)
+                    {
+                        Question AnsIndex = Answers.get(j);
+                        AnsIndex.setAnswer(AnsIndex.getAnswer()+"; "+QueBuff.getAnswer());
+                        Answers.set(j,AnsIndex);
+                    }
+                }
+
+
+            }
+        }
+
+        JSONArray Ans = new JSONArray();
+        for(int i=0;i < Answers.size();i++)
+        {
+
+            Question Que = Answers.get(i);
+            Que.setQuestionId(i+1);
+            Que.setQuestionareId(0);
+            Ans.add(Que);
+        }
+        ReSum.put("questions",Ans);
+        //String questionareList_str = JSONObject.toJSONString(QuesList);
+        ReSum.put("finishNum",finishNum);
+
+        return new ResponseEntity(ReSum,HttpStatus.OK);
+
+
+
+    //return 0;
     }
 
 }

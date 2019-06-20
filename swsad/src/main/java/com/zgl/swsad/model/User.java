@@ -21,6 +21,12 @@ passwords	string
  */
 public class User {
     private Integer userId;
+
+    public Integer getStuId() { return stuId;}
+
+    public void setStuId(Integer stuId) { this.stuId = stuId; }
+
+    private Integer stuId;
     private Integer userType;
     private String name;
     private String avator;
