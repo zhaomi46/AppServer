@@ -4,12 +4,13 @@ import com.zgl.swsad.model.Questionare;
 import org.apache.ibatis.annotations.*;
 
 public interface QuestionareMapper {
-    @Insert("INSERT INTO questionare (taskId, questionNum)" +
-            " Values(#{taskId}, #{questionNum} )")
+    @Insert("INSERT INTO questionare (taskId, questionNum,description,title)" +
+            " Values(#{taskId}, #{questionNum},#{description},#{title} )")
     @Options(useGeneratedKeys = true, keyProperty = "questionareId")
     int insertQuestionare(Questionare questionare);
 
-    @Update("UPDATE questionare set  questionNum=#{questionNum} where taskId=#{taskId}")
+    @Update("UPDATE questionare set  questionNum=#{questionNum},description=#{description}" +
+            ",title = #{title} where taskId=#{taskId}")
     int updateQuestionare(Questionare questionare);
 
     @Select("SELECT * FROM questionare WHERE taskId = #{taskId}")
