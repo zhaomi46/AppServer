@@ -38,7 +38,8 @@ public class User {
     private String mailAddr;
     private String phoneNum;
     private Integer creditVal;
-    private Integer balance;
+
+    private Double balance;
     private String tags;
     private String password;
 
@@ -138,13 +139,9 @@ public class User {
         this.creditVal = creditVal;
     }
 
-    public Integer getBalance() {
-        return balance;
-    }
 
-    public void setBalance(Integer balance) {
-        this.balance = balance;
-    }
+    public Double getBalance() { return balance; }
+    public void setBalance(Double balance) { this.balance = balance; }
 
     public String getTags() {
         return tags;
