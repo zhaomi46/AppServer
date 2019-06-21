@@ -31,6 +31,9 @@ public class TaskService {
         return taskMapper.selectTaskByAccUserId(accUserId);
     }
 
+    //Get tasks by missionId
+    public ArrayList<Task> selectTaskByMissionId(int missionId) {return taskMapper.selectTaskByMissionId(missionId);}
+
     //调整某个任务
     public int updateTask(Task task) { return taskMapper.updateTask(task); }
 
