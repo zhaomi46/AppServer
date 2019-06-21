@@ -30,6 +30,6 @@ public class ImageController {
         } catch (Exception e) {
             // TODO: handle exception
         }
-        return new ResponseEntity(new Image(fileName), HttpStatus.OK);
+        return new ResponseEntity(new Image(fileName), HttpStatus.CREATED);
     }
 }
