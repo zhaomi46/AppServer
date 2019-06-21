@@ -67,6 +67,7 @@ public class MissionController {
             JSONObject task_json = param.getJSONObject("task");
             task_json.put("MissionId",missionId);
             if (task_json.get("pubUserId") != currentUser.getUserId()) {
+                missionService.deleteMission(missionId);
                 return new ResponseEntity(new ReturnMsg("PubUserId invalid !"), HttpStatus.UNAUTHORIZED);
             }
             JSONObject questionare_json = param.getJSONObject("questionare");
@@ -78,6 +79,7 @@ public class MissionController {
             Task task = (Task) JSONObject.toJavaObject(task_json, Task.class);
             int opNum1 = taskService.insertTask(task);
             if (opNum1 != Constants.INSERT_FAIL) {
+                missionService.deleteMission(missionId);
                 //count++;
                 questionare_json.put("taskId", opNum1);
             } else {
@@ -86,6 +88,7 @@ public class MissionController {
             Questionare questionare = (Questionare) JSONObject.toJavaObject(questionare_json, Questionare.class);
             int opNum2 = questionareService.insertQuestionare(questionare);
             if (opNum2 == Constants.INSERT_FAIL) {
+                missionService.deleteMission(missionId);
                 //count++;
                 return new ResponseEntity(new ReturnMsg("Questionare creat fail !"), HttpStatus.INTERNAL_SERVER_ERROR);
             }
@@ -95,6 +98,7 @@ public class MissionController {
                 Question question = (Question) JSONObject.toJavaObject(question_json, Question.class);
                 int opNum3 = questionService.insertQuestion(question);
                 if (opNum3 != 1) {
+                    missionService.deleteMission(missionId);
                     //count++;
                     return new ResponseEntity(new ReturnMsg("Some questions creat fail !"), HttpStatus.INTERNAL_SERVER_ERROR);
                 }
@@ -161,6 +165,7 @@ public class MissionController {
         //System.out.println("xxx"+missionId);
         if(task_json.get("pubUserId") != currentUser.getUserId())
         {
+            missionService.deleteMission(missionId);
             return new ResponseEntity(new ReturnMsg("PubUserId invalid !"),HttpStatus.UNAUTHORIZED);
         }
         JSONObject errand_json = param.getJSONObject("errand");
@@ -169,6 +174,7 @@ public class MissionController {
         Task task = (Task)JSONObject.toJavaObject(task_json,Task.class);
         int opNum1 = taskService.insertTask(task);
         if( opNum1 == Constants.INSERT_FAIL ){
+            missionService.deleteMission(missionId);
             return new ResponseEntity(new ReturnMsg("Task creat fail !"),HttpStatus.INTERNAL_SERVER_ERROR);
         }
         else
@@ -179,6 +185,7 @@ public class MissionController {
         Errand errand = (Errand)JSONObject.toJavaObject(errand_json,Errand.class);
         int opNum2 = errandService.insertErrand(errand);
         if( opNum2 == Constants.INSERT_FAIL  ){
+            missionService.deleteMission(missionId);
             return new ResponseEntity(new ReturnMsg("Errand creat fail !"),HttpStatus.INTERNAL_SERVER_ERROR);
         }
         else
