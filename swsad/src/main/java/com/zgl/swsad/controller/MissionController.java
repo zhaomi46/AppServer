@@ -1,5 +1,6 @@
 package com.zgl.swsad.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.zgl.swsad.authorization.annotation.Authorization;
@@ -28,9 +29,82 @@ public class MissionController {
     QuestionareService questionareService;
     @Autowired
     QuestionService questionService;
+    @Autowired
+    ErrandService errandService;
 
     @Autowired
     private UserService userService;
+
+    @CrossOrigin
+    @Authorization
+    @RequestMapping(value="/missions/questionares", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public Object createMissionQA (@RequestBody JSONObject param, @CurrentUser User currentUser) {
+
+
+        JSONObject mission_json = param.getJSONObject("mission");
+        //System.out.println("mis json" + mission_json);
+        //Mission mission = JSONObject.toJavaObject(mission_json,Mission.class);
+
+        int userId = (int) mission_json.get("userId");//mission.getUserId();
+        if (userService.selectUser(userId) == null) {
+            return new ResponseEntity(new ReturnMsg("User not found."), HttpStatus.NOT_FOUND);
+        }
+
+        if (userId != currentUser.getUserId()) {
+            return new ResponseEntity(new ReturnMsg("Unauthorized."), HttpStatus.UNAUTHORIZED);
+        }
+        //System.out.println("xxx");
+        Mission mission = (Mission) JSONObject.toJavaObject(mission_json, Mission.class);
+        //System.out.println("xxx2");
+        int missionId = missionService.insertMission(mission);
+        if (missionId == Constants.INSERT_FAIL) {
+            return new ResponseEntity(new ReturnMsg("Server error.mission creat fail"), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        int loopTime = (int)mission_json.get("taskNum");
+        for(int count = 0; count < loopTime;count++)
+        {
+            JSONObject task_json = param.getJSONObject("task");
+            task_json.put("MissionId",missionId);
+            if (task_json.get("pubUserId") != currentUser.getUserId()) {
+                return new ResponseEntity(new ReturnMsg("PubUserId invalid !"), HttpStatus.UNAUTHORIZED);
+            }
+            JSONObject questionare_json = param.getJSONObject("questionare");
+            JSONArray questions_json = questionare_json.getJSONArray("questions");
+            //int count = 0;
+            //int num =  questionare_json.size() - 3;
+            //注意这里的questionare_size得到的长度不是以JsonObject作为单位，而是以键值对作为单位,所以还要加上前面的3个键值对
+
+            Task task = (Task) JSONObject.toJavaObject(task_json, Task.class);
+            int opNum1 = taskService.insertTask(task);
+            if (opNum1 != Constants.INSERT_FAIL) {
+                //count++;
+                questionare_json.put("taskId", opNum1);
+            } else {
+                return new ResponseEntity(new ReturnMsg("Task creat fail !"), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            Questionare questionare = (Questionare) JSONObject.toJavaObject(questionare_json, Questionare.class);
+            int opNum2 = questionareService.insertQuestionare(questionare);
+            if (opNum2 == Constants.INSERT_FAIL) {
+                //count++;
+                return new ResponseEntity(new ReturnMsg("Questionare creat fail !"), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            for (int i = 0; i < questions_json.size(); i++) {
+                JSONObject question_json = (JSONObject) questions_json.getJSONObject(i); //这里不能是get(i),get(i)只会得到键值对
+                question_json.put("questionareId", opNum2);
+                Question question = (Question) JSONObject.toJavaObject(question_json, Question.class);
+                int opNum3 = questionService.insertQuestion(question);
+                if (opNum3 != 1) {
+                    //count++;
+                    return new ResponseEntity(new ReturnMsg("Some questions creat fail !"), HttpStatus.INTERNAL_SERVER_ERROR);
+                }
+            }
+        }
+
+        return new ResponseEntity(new ReturnMsg("create task successfully!"), HttpStatus.OK);
+
+
+    }
 
     @CrossOrigin
     @Authorization
@@ -53,6 +127,63 @@ public class MissionController {
         }  else {
             return new ResponseEntity(new ReturnMsg("Server error."), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+
+    }
+
+    @CrossOrigin
+    @Authorization
+    @RequestMapping(value="/missions/errands", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public Object createMissionER (@RequestBody JSONObject param, @CurrentUser User currentUser) {
+
+        JSONObject mission_json = param.getJSONObject("mission");
+        //System.out.println("mis json" + mission_json);
+        //Mission mission = JSONObject.toJavaObject(mission_json,Mission.class);
+
+        int userId = (int)mission_json.get("userId");//mission.getUserId();
+        if (userService.selectUser(userId) == null) {
+            return new ResponseEntity(new ReturnMsg("User not found."), HttpStatus.NOT_FOUND);
+        }
+
+        if (userId != currentUser.getUserId()) {
+            return new ResponseEntity(new ReturnMsg("Unauthorized."), HttpStatus.UNAUTHORIZED);
+        }
+        //System.out.println("xxx");
+        Mission mission = (Mission)JSONObject.toJavaObject(mission_json,Mission.class);
+        //System.out.println("xxx2");
+        int missionId = missionService.insertMission(mission);
+        if(missionId  == Constants.INSERT_FAIL)
+        {
+            return new ResponseEntity(new ReturnMsg("Server error.mission creat fail"), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        JSONObject task_json = param.getJSONObject("task");
+        task_json.put("MissionId",missionId);
+        //System.out.println("xxx"+missionId);
+        if(task_json.get("pubUserId") != currentUser.getUserId())
+        {
+            return new ResponseEntity(new ReturnMsg("PubUserId invalid !"),HttpStatus.UNAUTHORIZED);
+        }
+        JSONObject errand_json = param.getJSONObject("errand");
+        int count = 0;
+
+        Task task = (Task)JSONObject.toJavaObject(task_json,Task.class);
+        int opNum1 = taskService.insertTask(task);
+        if( opNum1 == Constants.INSERT_FAIL ){
+            return new ResponseEntity(new ReturnMsg("Task creat fail !"),HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        else
+        {
+            errand_json.put("taskId",opNum1);
+        }
+
+        Errand errand = (Errand)JSONObject.toJavaObject(errand_json,Errand.class);
+        int opNum2 = errandService.insertErrand(errand);
+        if( opNum2 == Constants.INSERT_FAIL  ){
+            return new ResponseEntity(new ReturnMsg("Errand creat fail !"),HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        else
+            return new ResponseEntity(new ReturnMsg("create task successfully!"), HttpStatus.OK);
+
 
     }
 
