@@ -2,7 +2,11 @@ package com.zgl.swsad.controller;
 
 import com.zgl.swsad.authorization.annotation.Authorization;
 import com.zgl.swsad.authorization.annotation.CurrentUser;
+import com.zgl.swsad.model.Task;
 import com.zgl.swsad.model.User;
+import com.zgl.swsad.model.Mission;
+import com.zgl.swsad.service.MissionService;
+import com.zgl.swsad.service.TaskService;
 import com.zgl.swsad.service.UserService;
 import com.zgl.swsad.util.ReturnMsg;
 import org.apache.ibatis.jdbc.Null;
@@ -14,6 +18,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 
 
 @RestController
@@ -23,6 +28,13 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private TaskService taskService;
+
+    @Autowired
+    private MissionService missionService;
+
     /**
      * 根据userId查询用户信息
      * 获取用户之前必须要已经登录
@@ -41,9 +53,9 @@ public class UserController {
         //不是当前登录用户则需要隐藏敏感信息
         if(currentUser.getUserId() != id)
             user.setPassword("");
-            user.setBalance(0);
+            user.setBalance(0.0);
 
-        return new ResponseEntity(user, HttpStatus.NOT_FOUND);
+        return new ResponseEntity(user, HttpStatus.OK);
 
     }
 
@@ -113,4 +125,43 @@ public class UserController {
         return userService.deleteUser(id);
     }
     */
+
+    //用户通过自己的ID来获得自己发布的任务
+    @CrossOrigin
+    @Authorization
+    @RequestMapping(value = "/users/{userId}/missions", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public Object getAllMissionsByUserId(@PathVariable int userId)
+    {
+        User user = userService.selectUser(userId);
+        if (user == null) {
+            return new ResponseEntity(new ReturnMsg("Invalid id supplied"), HttpStatus.BAD_REQUEST);
+        }
+
+        ArrayList<Mission> mission = missionService.selectMissionByUserId(userId);
+
+        if (mission == null) {
+            return new ResponseEntity(new ReturnMsg("User not found"), HttpStatus.NOT_FOUND);
+        }
+
+        return new ResponseEntity(mission, HttpStatus.OK);
+    }
+
+    //用户通过自己的ID来获得接收的任务
+    @CrossOrigin
+    @Authorization
+    @RequestMapping(value = "/users/{userId}/tasks", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public Object getAllTasksByUserId(@PathVariable int userId) {
+        User user = userService.selectUser(userId);
+        if (user == null) {
+            return new ResponseEntity(new ReturnMsg("Invalid id supplied"), HttpStatus.BAD_REQUEST);
+        }
+
+        ArrayList<Task> task = taskService.selectTaskByAccUserID(userId);
+
+        if (task == null) {
+            return new ResponseEntity(new ReturnMsg("User not found"), HttpStatus.NOT_FOUND);
+        }
+
+        return new ResponseEntity(task, HttpStatus.OK);
+    }
 }

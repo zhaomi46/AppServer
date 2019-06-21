@@ -2,12 +2,14 @@ package com.zgl.swsad.controller;
 
 import com.zgl.swsad.authorization.annotation.Authorization;
 import com.zgl.swsad.config.Constants;
+import com.zgl.swsad.model.Image;
 import com.zgl.swsad.util.FileUtil;
 import com.zgl.swsad.util.ReturnMsg;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import java.util.UUID;
 
 @RestController
 public class ImageController {
@@ -19,13 +21,13 @@ public class ImageController {
             new ResponseEntity(new ReturnMsg("uploadimg fail"), HttpStatus.BAD_REQUEST);
         }
         String contentType = file.getContentType();
-        String fileName = file.getOriginalFilename();
+        String fileName = UUID.randomUUID().toString().replaceAll("-", "");
         try {
             FileUtil.uploadFile(file.getBytes(), Constants.IMAGEPATH, fileName);
             System.out.println(contentType + fileName);
         } catch (Exception e) {
             // TODO: handle exception
         }
-        return new ResponseEntity(new ReturnMsg("uploadimg success"), HttpStatus.CREATED);
+        return new ResponseEntity(new Image(fileName), HttpStatus.CREATED);
     }
 }

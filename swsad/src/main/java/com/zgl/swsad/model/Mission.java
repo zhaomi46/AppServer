@@ -7,15 +7,23 @@ public class Mission {
     private String title;
     private String deadLine;
     private String tags;
-    private Integer money;
+    private Double money;
     private Integer userId;
+    private Integer taskNum;
 
+    public Integer getTaskNum() {
+        return taskNum;
+    }
+
+    public void setTaskNum(Integer taskNum) {
+        this.taskNum = taskNum;
+    }
 
     public Integer getMissionId() {
         return missionId;
     }
 
-    public void setMissionId(int missionId) {
+    public void setMissionId(Integer missionId) {
         this.missionId = missionId;
     }
 
@@ -59,11 +67,11 @@ public class Mission {
         this.tags = tags;
     }
 
-    public Integer getMoney() {
+    public Double getMoney() {
         return money;
     }
 
-    public void setMoney(Integer money) {
+    public void setMoney(Double money) {
         this.money = money;
     }
 

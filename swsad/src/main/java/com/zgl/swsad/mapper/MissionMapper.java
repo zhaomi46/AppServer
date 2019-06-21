@@ -9,8 +9,8 @@ import java.util.ArrayList;
 
 @Repository
 public interface MissionMapper {
-    @Insert("INSERT INTO mission (publishTime, missionStatus, title, deadLine, tags, money, userId) " +
-            "VALUES (#{publishTime}, #{missionStatus}, #{title}, #{deadLine}, #{tags}, #{money}, #{userId})")
+    @Insert("INSERT INTO mission (publishTime, missionStatus, title, deadLine, tags, money, userId,taskNum) " +
+            "VALUES (#{publishTime}, #{missionStatus}, #{title}, #{deadLine}, #{tags}, #{money}, #{userId},#{taskNum})")
     @Options(useGeneratedKeys = true, keyProperty = "missionId")
     int insertMission(Mission mission);
 
@@ -20,8 +20,11 @@ public interface MissionMapper {
     @Select("SELECT * FROM mission WHERE missionId = #{missionId}")
     Mission selectMission(int missionId);
 
+    @Select("SELECT * FROM mission WHERE userId = #{userId}")
+    ArrayList<Mission> selectMissionByUserId(int userId);
+
     @Update("UPDATE mission " +
-            "SET publishTime = #{publishTime}, missionStatus = #{missionStatus}, title = #{title}, deadLine = #{deadLine}, tags = #{tags}, money = #{money}, userId = #{userId} " +
+            "SET publishTime = #{publishTime}, missionStatus = #{missionStatus}, title = #{title}, deadLine = #{deadLine}, tags = #{tags}, money = #{money}, userId = #{userId}, taskNum = #{taskNum} " +
             "WHERE missionId = #{missionId}")
     int updateMission(Mission mission);
 

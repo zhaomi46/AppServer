@@ -24,17 +24,17 @@ public interface UserMapper {
 
     /**
      * 添加新用户
-     * @param User 实例
+     * @param user 实例
      * @return 成功操作的记录数目
      */
-    @Insert("INSERT INTO user (userType, name, avator, nickName, age, sex, grade, major, mailAddr, phoneNum, creditVal, " +
-            "balance, tags, password) Values(#{userType}, #{name}, #{avator}, #{nickName}, #{age}, #{sex}, #{grade}, #{major}, " +
-            "#{mailAddr}, #{phoneNum}, #{creditVal}, #{balance}, #{tags}, #{password})")
+    @Insert("INSERT INTO user (userType,stuId, name, avator, nickName, age, sex, grade, major, mailAddr, phoneNum, creditVal, " +
+            "balance, tags, password) Values(#{userType},#{stuId}, #{name}, #{avator}, #{nickName}, #{age}, #{sex}, #{grade}, #{major}, " +
+            "#{mailAddr}, #{phoneNum}, 0, 0, #{tags}, #{password})")
     int insertUser(User user);
 
     @Update("UPDATE user set userType=#{userType}, name=#{name}, avator=#{avator}, nickname=#{nickName}, age=#{age}," +
-            "sex=#{sex}, grade=#{grade}, major=#{major}, mailAddr=#{mailAddr}, phoneNum=#{phoneNum}, creditVal=#{creditVal}," +
-            "balance=#{balance}, tags=#{tags}, password=#{password} where userId=#{userId}")
+            "sex=#{sex}, grade=#{grade}, major=#{major}, mailAddr=#{mailAddr}, phoneNum=#{phoneNum}, " +
+            " tags=#{tags}, password=#{password} where userId=#{userId}")
     int updateUser(User user);
 
     @Delete("DELETE FROM user where userId=#{userId}")
