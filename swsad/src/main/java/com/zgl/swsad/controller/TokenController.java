@@ -51,7 +51,7 @@ public class TokenController {
         String tokenString = tokenManager.createToken(user.getUserId().longValue(), true);
         Integer userID = user.getUserId();
         JSONObject result = new JSONObject();
-        result.put("useId", userID);
+        result.put("userId", userID);
         result.put("token", tokenString);
         return new ResponseEntity(result, HttpStatus.OK);
     }
