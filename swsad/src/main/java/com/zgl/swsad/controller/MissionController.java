@@ -369,4 +369,62 @@ public class MissionController {
     //return 0;
     }
 
+    @CrossOrigin
+    @Authorization
+    @RequestMapping(value="/missions/AllMissions", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public Object GetAllMissions() {
+        ArrayList<Mission> AllMissions = missionService.selectAllMissions();
+        //System.out.println("missions"+AllMissions.size());
+        ArrayList<JSONObject> ReMissions = new ArrayList();
+
+        for(int i=0; i < AllMissions.size();i++)
+        {
+
+            Mission BuffMission = AllMissions.get(i);
+            JSONObject BuffJson = new JSONObject(new LinkedHashMap());
+            BuffJson.put("missionId",BuffMission.getMissionId());
+            BuffJson.put("title",BuffMission.getTitle());
+            BuffJson.put("publishTime",BuffMission.getPublishTime());
+            BuffJson.put("deadLine",BuffMission.getDeadLine());
+
+
+            ArrayList<Task> TaskFromBuffMission = taskService.selectTaskByMissionId(BuffMission.getMissionId());
+            if(TaskFromBuffMission == null)
+            {
+                return new ReturnMsg("The mission"+BuffMission.getMissionId()+" have no tasks !");
+            }
+            Task BuffTask = TaskFromBuffMission.get(0);
+
+
+            if(BuffTask.getTaskType() == 0)
+            {
+                BuffJson.put("taskType",0);
+                Errand BuffErrand = errandService.selectErrandByTaskID(BuffTask.getTaskId());
+                BuffJson.put("description",BuffErrand.getDescription());
+            }
+            else if(BuffTask.getTaskType() == 1)
+            {
+                BuffJson.put("taskType",1);
+                Questionare BuffQA = questionareService.selectQuestionareByTaskID(BuffTask.getTaskId());
+                BuffJson.put("description",BuffQA.getDescription());
+            }
+
+            User BuffUser = userService.selectUser(BuffTask.getPubUserId());
+            BuffJson.put("avator",BuffUser.getAvator());
+
+            if( !ReMissions.add(BuffJson))
+            {
+                return new ReturnMsg("MissionId "+BuffMission.getMissionId()+" cannot get !");
+            }
+
+        }
+
+        JSONObject ReJson = new JSONObject(new LinkedHashMap());
+        ReJson.put("MissionNum",AllMissions.size());
+        ReJson.put("AllMissions",ReMissions);
+
+        return new ResponseEntity(ReJson,HttpStatus.OK);
+
+    }
+
 }
