@@ -4,6 +4,10 @@ public class Errand {
 
     private Integer errandId;
     private String description;
+
+
+
+    private String pic;
     private Integer taskId;
 
     public Integer getErrandId() {
@@ -28,6 +32,14 @@ public class Errand {
 
     public void setTaskId(Integer taskId) {
         this.taskId = taskId;
+    }
+
+    public String getPic() {
+        return pic;
+    }
+
+    public void setPic(String pic) {
+        this.pic = pic;
     }
 
 
