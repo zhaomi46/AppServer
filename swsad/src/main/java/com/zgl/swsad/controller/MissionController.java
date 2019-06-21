@@ -382,6 +382,7 @@ public class MissionController {
 
             Mission BuffMission = AllMissions.get(i);
             JSONObject BuffJson = new JSONObject(new LinkedHashMap());
+            BuffJson.put("missionId",BuffMission.getMissionId());
             BuffJson.put("title",BuffMission.getTitle());
             BuffJson.put("publishTime",BuffMission.getPublishTime());
             BuffJson.put("deadLine",BuffMission.getDeadLine());
