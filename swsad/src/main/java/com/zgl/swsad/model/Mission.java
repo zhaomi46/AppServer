@@ -7,7 +7,7 @@ public class Mission {
     private String title;
     private String deadLine;
     private String tags;
-    private Integer money;
+    private Double money;
     private Integer userId;
     private Integer taskNum;
 
@@ -67,11 +67,11 @@ public class Mission {
         this.tags = tags;
     }
 
-    public Integer getMoney() {
+    public Double getMoney() {
         return money;
     }
 
-    public void setMoney(Integer money) {
+    public void setMoney(Double money) {
         this.money = money;
     }
 
