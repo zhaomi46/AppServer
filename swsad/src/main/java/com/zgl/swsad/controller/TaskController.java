@@ -32,6 +32,10 @@ public class TaskController {
     private QuestionService questionService;
     @Autowired
     private ErrandService errandService;
+    @Autowired
+    private MissionService missionService;
+    @Autowired
+    private UserService userService;
 
     //创建问卷型任务
     @CrossOrigin
@@ -276,6 +280,90 @@ public class TaskController {
     }
 
 
+    @CrossOrigin
+    @Authorization
+    @RequestMapping(value = "/tasks/{taskID}/finishErrand",method = RequestMethod.GET,produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public Object finish(@PathVariable int taskID, @CurrentUser User currentUser){
+
+        Task BuffTask = taskService.selectTask(taskID);
+        if(BuffTask == null)
+        {
+            return new ResponseEntity(new ReturnMsg("The task not found !"),HttpStatus.NOT_FOUND);
+        }
+
+        if(BuffTask.getTaskStatus() == 0)
+        {
+            return new ResponseEntity(new ReturnMsg("The task has not been accepted !"),HttpStatus.BAD_REQUEST);
+        }
+
+        if(BuffTask.getTaskStatus() == 3)
+        {
+            return new ResponseEntity(new ReturnMsg("The task has finished !"),HttpStatus.OK);
+        }
+
+        if(currentUser.getUserId() == BuffTask.getPubUserId())
+        {
+            if(BuffTask.getTaskStatus() == 2)
+            {
+                BuffTask.setTaskStatus(3);
+                if(taskService.updateTask(BuffTask) == 1)
+                {
+                    Mission BuffMission = missionService.selectMission(BuffTask.getMissionId());
+                    double aveMoney = BuffMission.getMoney()/BuffMission.getTaskNum();
+                    BuffMission.setMoney(BuffMission.getMoney()-aveMoney);
+                    User BuffUser = userService.selectUser(BuffTask.getAccUserId());
+                    BuffUser.setBalance(BuffUser.getBalance()+aveMoney);
+                    BuffUser.setCreditVal(BuffUser.getCreditVal()+1);
+                    try
+                    {
+                        missionService.updateMission(BuffMission);
+                        userService.updateBnC(BuffUser.getUserId(),BuffUser.getBalance(),BuffUser.getCreditVal());
+                        userService.updateBnC(currentUser.getUserId(),currentUser.getBalance(),currentUser.getCreditVal()+1);
+
+                    }
+                    catch (Exception e)
+                    {
+                        if(missionService.selectMission(BuffMission.getMissionId()).getMoney() == BuffMission.getMoney())
+                        {
+                            BuffMission.setMoney(BuffMission.getMoney()+aveMoney);
+                            missionService.updateMission(BuffMission);
+                        }
+                        if(userService.selectUser(BuffUser.getUserId()).getBalance() == BuffUser.getBalance())
+                        {
+                            userService.updateBnC(BuffUser.getUserId(),BuffUser.getBalance()-aveMoney,BuffUser.getCreditVal()-1);
+                        }
+
+                        return new ResponseEntity(new ReturnMsg("Server error : finish fail !\n"+e.getMessage()),HttpStatus.INTERNAL_SERVER_ERROR);
+                    }
+
+                }
+
+                return new ResponseEntity(new ReturnMsg("Finish  successfully!"),HttpStatus.OK);
+            }
+            else if(BuffTask.getTaskStatus() == 1)
+            {
+                return new ResponseEntity(new ReturnMsg("AccUser has not finished !"),HttpStatus.OK);
+            }
+        }
+        else if(currentUser.getUserId() == BuffTask.getAccUserId() )
+        {
+           if(BuffTask.getTaskStatus() == 1)
+           {
+               BuffTask.setTaskStatus(2);
+               taskService.updateTask(BuffTask);
+               return new ResponseEntity(new ReturnMsg("Finish successfully !"),HttpStatus.OK);
+           }
+           else if(BuffTask.getTaskStatus() == 2)
+           {
+               return new ResponseEntity(new ReturnMsg("You have finished this task, please wait for publishUser verifying !"),HttpStatus.OK);
+           }
+        }
+
+
+            return new ResponseEntity(new ReturnMsg("Sorry, this is not your acc or pub task !"),HttpStatus.BAD_REQUEST);
+
+
+    }
 
 
 }
