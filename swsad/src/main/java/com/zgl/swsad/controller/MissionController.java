@@ -526,6 +526,9 @@ public class MissionController {
             BuffJson.put("avator",BuffUser.getAvator());
             BuffJson.put("myAccept",myAccMission);
 
+            boolean myPubMission = (currentUser.getUserId() == BuffMission.getUserId());
+            BuffJson.put("myPub",myPubMission);
+
             if( !ReMissions.add(BuffJson))
             {
                 return new ReturnMsg("MissionId "+BuffMission.getMissionId()+" cannot get !");
