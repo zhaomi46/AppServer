@@ -87,6 +87,12 @@ public class MissionController {
                 //注意这里的questionare_size得到的长度不是以JsonObject作为单位，而是以键值对作为单位,所以还要加上前面的3个键值对
 
                 Task task = (Task) JSONObject.toJavaObject(task_json, Task.class);
+
+                if(task.getTaskType() != 1)
+                {
+                    missionService.deleteMission(missionId);
+                    return new ResponseEntity(new ReturnMsg("Wrong taskType !"), HttpStatus.UNAUTHORIZED);
+                }
                 int opNum1 = taskService.insertTask(task);
                 if (opNum1 != Constants.INSERT_FAIL) {
 
@@ -196,6 +202,11 @@ public class MissionController {
             int count = 0;
 
             Task task = (Task) JSONObject.toJavaObject(task_json, Task.class);
+            if(task.getTaskType() != 0)
+            {
+                missionService.deleteMission(missionId);
+                return new ResponseEntity(new ReturnMsg("Wrong taskType !"), HttpStatus.UNAUTHORIZED);
+            }
             int opNum1 = taskService.insertTask(task);
             if (opNum1 == Constants.INSERT_FAIL) {
                 missionService.deleteMission(missionId);
