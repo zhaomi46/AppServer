@@ -52,7 +52,7 @@ public class MissionController {
             }
 
             if (userId != currentUser.getUserId()) {
-                return new ResponseEntity(new ReturnMsg("Unauthorized."), HttpStatus.UNAUTHORIZED);
+                return new ResponseEntity(new ReturnMsg("Unauthorized or wrong userId."), HttpStatus.UNAUTHORIZED);
             }
             //System.out.println("xxx");
             Mission mission = (Mission) JSONObject.toJavaObject(mission_json, Mission.class);
@@ -61,17 +61,24 @@ public class MissionController {
             int missionId = missionService.insertMission(mission);
             if (missionId == Constants.INSERT_FAIL) {
                 return new ResponseEntity(new ReturnMsg("Server error.mission creat fail"), HttpStatus.INTERNAL_SERVER_ERROR);
+                //String ReStr = "Server error.mission creat fail";
             }
 
 
         try {
             int loopTime = (int) mission_json.get("taskNum");
+            if(loopTime <= 0){
+                missionService.deleteMission(missionId);
+                return new ResponseEntity(new ReturnMsg("taskNum should be greater than 0 !"), HttpStatus.BAD_REQUEST);
+            }
             for (int count = 0; count < loopTime; count++) {
                 JSONObject task_json = param.getJSONObject("task");
+                task_json.remove("accUserId");
                 task_json.put("MissionId", missionId);
                 if (task_json.get("pubUserId") != currentUser.getUserId()) {
                     missionService.deleteMission(missionId);
                     return new ResponseEntity(new ReturnMsg("PubUserId invalid !"), HttpStatus.UNAUTHORIZED);
+
                 }
                 JSONObject questionare_json = param.getJSONObject("questionare");
                 JSONArray questions_json = questionare_json.getJSONArray("questions");
@@ -82,10 +89,12 @@ public class MissionController {
                 Task task = (Task) JSONObject.toJavaObject(task_json, Task.class);
                 int opNum1 = taskService.insertTask(task);
                 if (opNum1 != Constants.INSERT_FAIL) {
-                    missionService.deleteMission(missionId);
+
                     //count++;
                     questionare_json.put("taskId", opNum1);
                 } else {
+                    System.out.println("task fail");
+                    missionService.deleteMission(missionId);
                     return new ResponseEntity(new ReturnMsg("Task creat fail !"), HttpStatus.INTERNAL_SERVER_ERROR);
                 }
                 Questionare questionare = (Questionare) JSONObject.toJavaObject(questionare_json, Questionare.class);
@@ -111,7 +120,7 @@ public class MissionController {
             e.printStackTrace();
             System.out.println("尝试回滚！");
             missionService.deleteMission(missionId);
-            return new ResponseEntity(new ReturnMsg("Error: creat fail !"), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity(new ReturnMsg("Error: creat fail !\n"+e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         return new ResponseEntity(new ReturnMsg("create task successfully!"), HttpStatus.OK);
@@ -149,8 +158,6 @@ public class MissionController {
     public Object createMissionER (@RequestBody JSONObject param, @CurrentUser User currentUser) {
 
         JSONObject mission_json = param.getJSONObject("mission");
-        //System.out.println("mis json" + mission_json);
-        //Mission mission = JSONObject.toJavaObject(mission_json,Mission.class);
 
         int userId = (int)mission_json.get("userId");//mission.getUserId();
         if (userService.selectUser(userId) == null) {
@@ -158,20 +165,28 @@ public class MissionController {
         }
 
         if (userId != currentUser.getUserId()) {
-            return new ResponseEntity(new ReturnMsg("Unauthorized."), HttpStatus.UNAUTHORIZED);
+            return new ResponseEntity(new ReturnMsg("Unauthorized or wrong userId."), HttpStatus.UNAUTHORIZED);
         }
-        //System.out.println("xxx");
+
+
         Mission mission = (Mission)JSONObject.toJavaObject(mission_json,Mission.class);
-        //System.out.println("xxx2");
         int missionId = missionService.insertMission(mission);
         if(missionId  == Constants.INSERT_FAIL)
         {
             return new ResponseEntity(new ReturnMsg("Server error.mission creat fail"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
+        int loopTime = (int) mission_json.get("taskNum");
+        if(loopTime != 1){
+            missionService.deleteMission(missionId);
+            return new ResponseEntity(new ReturnMsg("taskNum of an errand must be 1 !"), HttpStatus.BAD_REQUEST);
+        }
+
         try {
             JSONObject task_json = param.getJSONObject("task");
+
             task_json.put("MissionId", missionId);
+            task_json.remove("accUserId");
             //System.out.println("xxx"+missionId);
             if (task_json.get("pubUserId") != currentUser.getUserId()) {
                 missionService.deleteMission(missionId);
@@ -201,7 +216,7 @@ public class MissionController {
             e.printStackTrace();
             System.out.println("尝试回滚！");
             missionService.deleteMission(missionId);
-            return new ResponseEntity(new ReturnMsg("Error: creat fail !"), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity(new ReturnMsg("Error: creat fail !"+e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         return new ResponseEntity(new ReturnMsg("create task successfully!"), HttpStatus.OK);
