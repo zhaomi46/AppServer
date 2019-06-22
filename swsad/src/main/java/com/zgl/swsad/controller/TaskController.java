@@ -249,7 +249,7 @@ public class TaskController {
     @RequestMapping(value = "/tasks/{taskID}/errands",method = RequestMethod.GET,produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public Object getErrandByTaskId(@PathVariable int taskID){
 
-        Errand errand = errandService.selectErrand(taskID);
+        Errand errand = errandService.selectErrandByTaskID(taskID);
         if(errand == null)
             return new ResponseEntity(new ReturnMsg("invalid taskId"), HttpStatus.NOT_FOUND);
 

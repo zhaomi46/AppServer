@@ -15,9 +15,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.zgl.swsad.config.Constants;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @RestController
 public class MissionController {
@@ -38,67 +38,119 @@ public class MissionController {
     @CrossOrigin
     @Authorization
     @RequestMapping(value="/missions/questionares", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public Object createMissionQA (@RequestBody JSONObject param, @CurrentUser User currentUser) {
+    public Object createMissionQA (@RequestBody JSONObject param, @CurrentUser User currentUser) throws ParseException {
 
 
-        JSONObject mission_json = param.getJSONObject("mission");
-        //System.out.println("mis json" + mission_json);
-        //Mission mission = JSONObject.toJavaObject(mission_json,Mission.class);
 
-        int userId = (int) mission_json.get("userId");//mission.getUserId();
-        if (userService.selectUser(userId) == null) {
-            return new ResponseEntity(new ReturnMsg("User not found."), HttpStatus.NOT_FOUND);
-        }
-
-        if (userId != currentUser.getUserId()) {
-            return new ResponseEntity(new ReturnMsg("Unauthorized."), HttpStatus.UNAUTHORIZED);
-        }
-        //System.out.println("xxx");
-        Mission mission = (Mission) JSONObject.toJavaObject(mission_json, Mission.class);
-        //System.out.println("xxx2");
-        int missionId = missionService.insertMission(mission);
-        if (missionId == Constants.INSERT_FAIL) {
-            return new ResponseEntity(new ReturnMsg("Server error.mission creat fail"), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
-        int loopTime = (int)mission_json.get("taskNum");
-        for(int count = 0; count < loopTime;count++)
-        {
-            JSONObject task_json = param.getJSONObject("task");
-            task_json.put("MissionId",missionId);
-            if (task_json.get("pubUserId") != currentUser.getUserId()) {
-                return new ResponseEntity(new ReturnMsg("PubUserId invalid !"), HttpStatus.UNAUTHORIZED);
+            JSONObject mission_json = param.getJSONObject("mission");
+            Calendar calendar = Calendar.getInstance();
+            String date = calendar.get(Calendar.YEAR)+"-";
+            if(calendar.get(Calendar.MONTH)+1 < 10)
+            {
+                date = date + "0" +(calendar.get(Calendar.MONTH)+1)+"-"+calendar.get(Calendar.DAY_OF_MONTH);
             }
-            JSONObject questionare_json = param.getJSONObject("questionare");
-            JSONArray questions_json = questionare_json.getJSONArray("questions");
-            //int count = 0;
-            //int num =  questionare_json.size() - 3;
-            //注意这里的questionare_size得到的长度不是以JsonObject作为单位，而是以键值对作为单位,所以还要加上前面的3个键值对
+            else
+            {
+                date = date +(calendar.get(Calendar.MONTH)+1)+"-"+calendar.get(Calendar.DAY_OF_MONTH);
+            }
+            mission_json.put("publishTime",date);
 
-            Task task = (Task) JSONObject.toJavaObject(task_json, Task.class);
-            int opNum1 = taskService.insertTask(task);
-            if (opNum1 != Constants.INSERT_FAIL) {
-                //count++;
-                questionare_json.put("taskId", opNum1);
-            } else {
-                return new ResponseEntity(new ReturnMsg("Task creat fail !"), HttpStatus.INTERNAL_SERVER_ERROR);
+            int userId = (int) mission_json.get("userId");//mission.getUserId();
+            if (userService.selectUser(userId) == null) {
+                return new ResponseEntity(new ReturnMsg("User not found."), HttpStatus.NOT_FOUND);
             }
-            Questionare questionare = (Questionare) JSONObject.toJavaObject(questionare_json, Questionare.class);
-            int opNum2 = questionareService.insertQuestionare(questionare);
-            if (opNum2 == Constants.INSERT_FAIL) {
-                //count++;
-                return new ResponseEntity(new ReturnMsg("Questionare creat fail !"), HttpStatus.INTERNAL_SERVER_ERROR);
+
+            if (userId != currentUser.getUserId()) {
+                return new ResponseEntity(new ReturnMsg("Unauthorized or wrong userId."), HttpStatus.UNAUTHORIZED);
             }
-            for (int i = 0; i < questions_json.size(); i++) {
-                JSONObject question_json = (JSONObject) questions_json.getJSONObject(i); //这里不能是get(i),get(i)只会得到键值对
-                question_json.put("questionareId", opNum2);
-                Question question = (Question) JSONObject.toJavaObject(question_json, Question.class);
-                int opNum3 = questionService.insertQuestion(question);
-                if (opNum3 != 1) {
+            //System.out.println("xxx");
+            Mission mission = (Mission) JSONObject.toJavaObject(mission_json, Mission.class);
+
+            //检测deadline在publishtime之后
+            String strDeadline = mission.getDeadLine();
+            SimpleDateFormat sdf= new SimpleDateFormat("yyyy-MM-dd");
+            Date dateDeadline =sdf.parse(strDeadline);
+            Date datePublish = sdf.parse(date);
+            Calendar calDeadLine = Calendar.getInstance();
+            Calendar calPublish = Calendar.getInstance();
+            calDeadLine.setTime(dateDeadline);
+            calPublish.setTime(datePublish);
+
+            boolean validDeadline = (calDeadLine.equals(calPublish) || calDeadLine.after(calPublish));
+            if(!validDeadline)
+            {
+                return new ResponseEntity(new ReturnMsg("Deadline error !"), HttpStatus.BAD_REQUEST);
+            }
+
+            int missionId = missionService.insertMission(mission);
+            if (missionId == Constants.INSERT_FAIL) {
+                return new ResponseEntity(new ReturnMsg("Server error.mission creat fail"), HttpStatus.INTERNAL_SERVER_ERROR);
+                //String ReStr = "Server error.mission creat fail";
+            }
+
+
+        try {
+            int loopTime = (int) mission_json.get("taskNum");
+            if(loopTime <= 0){
+                missionService.deleteMission(missionId);
+                return new ResponseEntity(new ReturnMsg("taskNum should be greater than 0 !"), HttpStatus.BAD_REQUEST);
+            }
+            for (int count = 0; count < loopTime; count++) {
+                JSONObject task_json = param.getJSONObject("task");
+                task_json.remove("accUserId");
+                task_json.put("MissionId", missionId);
+                if (task_json.get("pubUserId") != currentUser.getUserId()) {
+                    missionService.deleteMission(missionId);
+                    return new ResponseEntity(new ReturnMsg("PubUserId invalid !"), HttpStatus.UNAUTHORIZED);
+
+                }
+                JSONObject questionare_json = param.getJSONObject("questionare");
+                JSONArray questions_json = questionare_json.getJSONArray("questions");
+                //int count = 0;
+                //int num =  questionare_json.size() - 3;
+                //注意这里的questionare_size得到的长度不是以JsonObject作为单位，而是以键值对作为单位,所以还要加上前面的3个键值对
+
+                Task task = (Task) JSONObject.toJavaObject(task_json, Task.class);
+
+                if(task.getTaskType() != 1)
+                {
+                    missionService.deleteMission(missionId);
+                    return new ResponseEntity(new ReturnMsg("Wrong taskType !"), HttpStatus.UNAUTHORIZED);
+                }
+                int opNum1 = taskService.insertTask(task);
+                if (opNum1 != Constants.INSERT_FAIL) {
+
                     //count++;
-                    return new ResponseEntity(new ReturnMsg("Some questions creat fail !"), HttpStatus.INTERNAL_SERVER_ERROR);
+                    questionare_json.put("taskId", opNum1);
+                } else {
+                    System.out.println("task fail");
+                    missionService.deleteMission(missionId);
+                    return new ResponseEntity(new ReturnMsg("Task creat fail !"), HttpStatus.INTERNAL_SERVER_ERROR);
+                }
+                Questionare questionare = (Questionare) JSONObject.toJavaObject(questionare_json, Questionare.class);
+                int opNum2 = questionareService.insertQuestionare(questionare);
+                if (opNum2 == Constants.INSERT_FAIL) {
+                    missionService.deleteMission(missionId);
+                    //count++;
+                    return new ResponseEntity(new ReturnMsg("Questionare creat fail !"), HttpStatus.INTERNAL_SERVER_ERROR);
+                }
+                for (int i = 0; i < questions_json.size(); i++) {
+                    JSONObject question_json = (JSONObject) questions_json.getJSONObject(i); //这里不能是get(i),get(i)只会得到键值对
+                    question_json.put("questionareId", opNum2);
+                    Question question = (Question) JSONObject.toJavaObject(question_json, Question.class);
+                    int opNum3 = questionService.insertQuestion(question);
+                    if (opNum3 != 1) {
+                        missionService.deleteMission(missionId);
+                        //count++;
+                        return new ResponseEntity(new ReturnMsg("Some questions creat fail !"), HttpStatus.INTERNAL_SERVER_ERROR);
+                    }
                 }
             }
+        }catch (Exception e){
+            e.printStackTrace();
+            System.out.println("尝试回滚！");
+            missionService.deleteMission(missionId);
+            return new ResponseEntity(new ReturnMsg("Error: creat fail !\n"+e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         return new ResponseEntity(new ReturnMsg("create task successfully!"), HttpStatus.OK);
@@ -133,11 +185,23 @@ public class MissionController {
     @CrossOrigin
     @Authorization
     @RequestMapping(value="/missions/errands", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public Object createMissionER (@RequestBody JSONObject param, @CurrentUser User currentUser) {
+    public Object createMissionER (@RequestBody JSONObject param, @CurrentUser User currentUser) throws ParseException {
 
         JSONObject mission_json = param.getJSONObject("mission");
-        //System.out.println("mis json" + mission_json);
-        //Mission mission = JSONObject.toJavaObject(mission_json,Mission.class);
+
+        Calendar calendar = Calendar.getInstance();
+        String date = calendar.get(Calendar.YEAR)+"-";
+        if(calendar.get(Calendar.MONTH)+1 < 10)
+        {
+            date = date + "0" +(calendar.get(Calendar.MONTH)+1)+"-"+calendar.get(Calendar.DAY_OF_MONTH);
+        }
+        else
+        {
+            date = date +(calendar.get(Calendar.MONTH)+1)+"-"+calendar.get(Calendar.DAY_OF_MONTH);
+        }
+        mission_json.put("publishTime",date);
+
+
 
         int userId = (int)mission_json.get("userId");//mission.getUserId();
         if (userService.selectUser(userId) == null) {
@@ -145,44 +209,83 @@ public class MissionController {
         }
 
         if (userId != currentUser.getUserId()) {
-            return new ResponseEntity(new ReturnMsg("Unauthorized."), HttpStatus.UNAUTHORIZED);
+            return new ResponseEntity(new ReturnMsg("Unauthorized or wrong userId."), HttpStatus.UNAUTHORIZED);
         }
-        //System.out.println("xxx");
+
+
         Mission mission = (Mission)JSONObject.toJavaObject(mission_json,Mission.class);
-        //System.out.println("xxx2");
+
+        //检测deadline在publishtime之后
+        String strDeadline = mission.getDeadLine();
+        SimpleDateFormat sdf= new SimpleDateFormat("yyyy-MM-dd");
+        Date dateDeadline =sdf.parse(strDeadline);
+        Date datePublish = sdf.parse(date);
+        Calendar calDeadLine = Calendar.getInstance();
+        Calendar calPublish = Calendar.getInstance();
+        calDeadLine.setTime(dateDeadline);
+        calPublish.setTime(datePublish);
+
+        boolean validDeadline = (calDeadLine.equals(calPublish) || calDeadLine.after(calPublish));
+        if(!validDeadline)
+        {
+            return new ResponseEntity(new ReturnMsg("Deadline error !"), HttpStatus.BAD_REQUEST);
+        }
+
         int missionId = missionService.insertMission(mission);
         if(missionId  == Constants.INSERT_FAIL)
         {
             return new ResponseEntity(new ReturnMsg("Server error.mission creat fail"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        JSONObject task_json = param.getJSONObject("task");
-        task_json.put("MissionId",missionId);
-        //System.out.println("xxx"+missionId);
-        if(task_json.get("pubUserId") != currentUser.getUserId())
-        {
-            return new ResponseEntity(new ReturnMsg("PubUserId invalid !"),HttpStatus.UNAUTHORIZED);
-        }
-        JSONObject errand_json = param.getJSONObject("errand");
-        int count = 0;
-
-        Task task = (Task)JSONObject.toJavaObject(task_json,Task.class);
-        int opNum1 = taskService.insertTask(task);
-        if( opNum1 == Constants.INSERT_FAIL ){
-            return new ResponseEntity(new ReturnMsg("Task creat fail !"),HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        else
-        {
-            errand_json.put("taskId",opNum1);
+        int loopTime = (int) mission_json.get("taskNum");
+        if(loopTime != 1){
+            missionService.deleteMission(missionId);
+            return new ResponseEntity(new ReturnMsg("taskNum of an errand must be 1 !"), HttpStatus.BAD_REQUEST);
         }
 
-        Errand errand = (Errand)JSONObject.toJavaObject(errand_json,Errand.class);
-        int opNum2 = errandService.insertErrand(errand);
-        if( opNum2 == Constants.INSERT_FAIL  ){
-            return new ResponseEntity(new ReturnMsg("Errand creat fail !"),HttpStatus.INTERNAL_SERVER_ERROR);
+        try {
+            JSONObject task_json = param.getJSONObject("task");
+
+            task_json.put("MissionId", missionId);
+            task_json.remove("accUserId");
+            //System.out.println("xxx"+missionId);
+            if (task_json.get("pubUserId") != currentUser.getUserId()) {
+                missionService.deleteMission(missionId);
+                return new ResponseEntity(new ReturnMsg("PubUserId invalid !"), HttpStatus.UNAUTHORIZED);
+            }
+            JSONObject errand_json = param.getJSONObject("errand");
+            int count = 0;
+
+            Task task = (Task) JSONObject.toJavaObject(task_json, Task.class);
+            if(task.getTaskType() != 0)
+            {
+                missionService.deleteMission(missionId);
+                return new ResponseEntity(new ReturnMsg("Wrong taskType !"), HttpStatus.UNAUTHORIZED);
+            }
+            int opNum1 = taskService.insertTask(task);
+            if (opNum1 == Constants.INSERT_FAIL) {
+                missionService.deleteMission(missionId);
+                return new ResponseEntity(new ReturnMsg("Task creat fail !"), HttpStatus.INTERNAL_SERVER_ERROR);
+            } else {
+                errand_json.put("taskId", opNum1);
+            }
+
+            Errand errand = (Errand) JSONObject.toJavaObject(errand_json, Errand.class);
+            int opNum2 = errandService.insertErrand(errand);
+            if (opNum2 == Constants.INSERT_FAIL) {
+                missionService.deleteMission(missionId);
+                return new ResponseEntity(new ReturnMsg("Errand creat fail !"), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
         }
-        else
-            return new ResponseEntity(new ReturnMsg("create task successfully!"), HttpStatus.OK);
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            System.out.println("尝试回滚！");
+            missionService.deleteMission(missionId);
+            return new ResponseEntity(new ReturnMsg("Error: creat fail !"+e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        return new ResponseEntity(new ReturnMsg("create task successfully!"), HttpStatus.OK);
 
 
     }
@@ -372,10 +475,11 @@ public class MissionController {
     @CrossOrigin
     @Authorization
     @RequestMapping(value="/missions/AllMissions", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public Object GetAllMissions() {
+    public Object GetAllMissions(@CurrentUser User currentUser) {
         ArrayList<Mission> AllMissions = missionService.selectAllMissions();
         //System.out.println("missions"+AllMissions.size());
         ArrayList<JSONObject> ReMissions = new ArrayList();
+
 
         for(int i=0; i < AllMissions.size();i++)
         {
@@ -393,8 +497,17 @@ public class MissionController {
             {
                 return new ReturnMsg("The mission"+BuffMission.getMissionId()+" have no tasks !");
             }
-            Task BuffTask = TaskFromBuffMission.get(0);
+            boolean myAccMission = false;
+            for(int ite = 0; ite < TaskFromBuffMission.size();ite++)
+            {
+                if(TaskFromBuffMission.get(ite).getAccUserId() == currentUser.getUserId())
+                {
+                    myAccMission = true;
+                    break;
+                }
+            }
 
+            Task BuffTask = TaskFromBuffMission.get(0);
 
             if(BuffTask.getTaskType() == 0)
             {
@@ -411,6 +524,11 @@ public class MissionController {
 
             User BuffUser = userService.selectUser(BuffTask.getPubUserId());
             BuffJson.put("avator",BuffUser.getAvator());
+            BuffJson.put("myAccept",myAccMission);
+
+            boolean myPubMission = (currentUser.getUserId() == BuffMission.getUserId());
+            BuffJson.put("myPub",myPubMission);
+            BuffJson.put("aveMoney",BuffMission.getMoney()/BuffMission.getTaskNum());
 
             if( !ReMissions.add(BuffJson))
             {
@@ -425,6 +543,76 @@ public class MissionController {
 
         return new ResponseEntity(ReJson,HttpStatus.OK);
 
+    }
+
+
+    @CrossOrigin
+    @Authorization
+    @RequestMapping(value="/missions/{missionId}/accept", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public Object acceptMission (@PathVariable int missionId, @CurrentUser User currentUser) throws ParseException {
+        Mission mission = missionService.selectMission(missionId);
+        if(mission == null)
+        {
+            return new ResponseEntity(new ReturnMsg("The mission doesn't exist !"), HttpStatus.NOT_FOUND);
+        }
+        if(mission.getMissionStatus() == 1)//接受人数已满
+        {
+            return new ResponseEntity(new ReturnMsg("The mission has been accepted !"), HttpStatus.BAD_REQUEST);
+        }
+        else if (mission.getMissionStatus() == 2)//已过期
+        {
+            return new ResponseEntity(new ReturnMsg("The mission is over the deadline !"), HttpStatus.BAD_REQUEST);
+        }
+        Calendar calendar = Calendar.getInstance();
+
+        String  strNow = calendar.get(Calendar.YEAR)+"-"+(calendar.get(Calendar.MONTH)+1)+"-"+calendar.get(Calendar.DAY_OF_MONTH);
+        String strDeadline = mission.getDeadLine();
+        SimpleDateFormat sdf= new SimpleDateFormat("yyyy-MM-dd");
+        Date dateDeadline =sdf.parse(strDeadline);
+        Date dataNow = sdf.parse(strNow);
+        Calendar calDeadLine = Calendar.getInstance();
+        Calendar calNow = Calendar.getInstance();
+        calDeadLine.setTime(dateDeadline);
+        calNow.setTime(dataNow);
+
+        //检测是否任务已过期
+        boolean validMission = (calDeadLine.equals(calNow) || calDeadLine.after(calNow));
+        //System.out.println(calDeadLine+"xxx"+calendar);
+        if(!validMission)
+        {
+            mission.setMissionStatus(2);
+            return new ResponseEntity(new ReturnMsg("The mission is over the deadline !"), HttpStatus.BAD_REQUEST);
+        }
+
+        ArrayList<Task> Tasks = taskService.selectTaskByMissionId(missionId);
+        int i;
+        boolean acc = false;
+        for( i=0; i < Tasks.size(); i++)
+        {
+            if(Tasks.get(i).getAccUserId() == null)
+            {
+                Task buff = Tasks.get(i);
+                buff.setAccUserId(currentUser.getUserId());
+                buff.setTaskStatus(1);
+                taskService.updateTask(buff);
+                acc = true;
+                i++;
+                break;
+            }
+        }
+
+        //mission接受人数已满
+        if(i == Tasks.size() && acc == true)
+        {
+            mission.setMissionStatus(1);
+            missionService.updateMission(mission);
+        }
+
+            return new ResponseEntity(new ReturnMsg("Accept successfully !"), HttpStatus.OK);
+
+
+
+        //return new ResponseEntity(new ReturnMsg("The mission has been accepted !"), HttpStatus.BAD_REQUEST);
     }
 
 }

@@ -6,12 +6,12 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ErrandMapper {
-    @Insert("INSERT INTO errand (description, taskId)" +
-            " Values(#{description}, #{taskId})")
+    @Insert("INSERT INTO errand (description,pic, taskId,privateInfo)" +
+            " Values(#{description},#{pic}, #{taskId},#{privateInfo})")
     @Options(useGeneratedKeys = true, keyProperty = "errandId")
     int insertErrand(Errand errand);
 
-    @Update("UPDATE errand set description=#{description}, taskId=#{taskId} where errandId=#{errandId}")
+    @Update("UPDATE errand set description=#{description},pic=#{pic}, taskId=#{taskId},privateInfo=#{privateInfo} where errandId=#{errandId}")
     int updateErrand(Errand errand);
 
     @Select("SELECT * FROM errand WHERE taskId = #{taskId}")
