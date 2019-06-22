@@ -179,7 +179,7 @@ public class TaskController {
     @CrossOrigin
     @Authorization
     @RequestMapping(value = "/tasks/{taskID}/questionares", method = RequestMethod.GET,produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public String getQuestionareByTaskId(@PathVariable int taskID){
+    public Object getQuestionareByTaskId(@PathVariable int taskID){
 
         Questionare questionare = questionareService.selectQuestionareByTaskID(taskID);
         String questionare_str = JSONObject.toJSONString(questionare);
@@ -190,7 +190,8 @@ public class TaskController {
         StringBuilder temp = new StringBuilder(questionare_str);
         temp.insert(questionare_str.length()-1,str);
         String Str = temp.toString();
-        return Str;
+        JSONObject ReturnJson = JSON.parseObject(Str);
+        return new ResponseEntity(ReturnJson,HttpStatus.OK);
 
     }
 
@@ -248,7 +249,7 @@ public class TaskController {
     @RequestMapping(value = "/tasks/{taskID}/errands",method = RequestMethod.GET,produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public Object getErrandByTaskId(@PathVariable int taskID){
 
-        Errand errand = errandService.selectErrand(taskID);
+        Errand errand = errandService.selectErrandByTaskID(taskID);
         if(errand == null)
             return new ResponseEntity(new ReturnMsg("invalid taskId"), HttpStatus.NOT_FOUND);
 
