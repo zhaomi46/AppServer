@@ -23,7 +23,6 @@ ROW_FORMAT=DYNAMIC
 
 CREATE TABLE `mission` (
 `missionId`  int(11) NOT NULL AUTO_INCREMENT ,
-`missionType`  int(11) NULL DEFAULT NULL ,
 `publishTime`  varchar(32)  NULL DEFAULT NULL ,
 `missionStatus`  int(11) NULL DEFAULT NULL ,
 `title`  varchar(64)  NULL DEFAULT NULL ,
