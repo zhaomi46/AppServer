@@ -153,6 +153,13 @@ public class MissionController {
             return new ResponseEntity(new ReturnMsg("Error: creat fail !\n"+e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
+        User user = userService.selectUser(mission.getUserId());
+        if(user.getBalance()-mission.getMoney() < 0)
+        {
+            missionService.deleteMission(missionId);
+            return new ResponseEntity(new ReturnMsg("Your balance is not enough!"), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        userService.updateBnC(user.getUserId(),user.getBalance()-mission.getMoney(),user.getCreditVal()+1);
         return new ResponseEntity(new ReturnMsg("create task successfully!"), HttpStatus.OK);
 
 
@@ -288,6 +295,14 @@ public class MissionController {
             return new ResponseEntity(new ReturnMsg("Error: creat fail !"+e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
+
+        User user = userService.selectUser(mission.getUserId());
+        if(user.getBalance()-mission.getMoney() < 0)
+        {
+            missionService.deleteMission(missionId);
+            return new ResponseEntity(new ReturnMsg("Your balance is not enough!"), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        userService.updateBnC(user.getUserId(),user.getBalance()-mission.getMoney(),user.getCreditVal()+1);
         return new ResponseEntity(new ReturnMsg("create task successfully!"), HttpStatus.OK);
 
 
@@ -553,6 +568,12 @@ public class MissionController {
     @Authorization
     @RequestMapping(value="/missions/{missionId}/accept", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public Object acceptMission (@PathVariable int missionId, @CurrentUser User currentUser) throws ParseException {
+
+        if(currentUser.getCreditVal() < 0)
+        {
+            return new ResponseEntity(new ReturnMsg("Sorry, the least credit value to accept task is 0 !"), HttpStatus.NOT_FOUND);
+        }
+
         Mission mission = missionService.selectMission(missionId);
         if(mission == null)
         {
