@@ -314,18 +314,36 @@ public class TaskController {
                     User BuffUser = userService.selectUser(BuffTask.getAccUserId());
                     BuffUser.setBalance(BuffUser.getBalance()+aveMoney);
                     BuffUser.setCreditVal(BuffUser.getCreditVal()+1);
+
+                    ArrayList<Task> TasksFromMission = taskService.selectTaskByMissionId(BuffMission.getMissionId());
+                    boolean missionFinish = true;
+                    for(int ite = 0; ite < TasksFromMission.size();ite++)
+                    {
+                        if(TasksFromMission.get(ite).getTaskStatus() != 3)
+                        {
+                            missionFinish = false;
+                            break;
+                        }
+                    }
+                    int mStatus = BuffMission.getMissionStatus();
+                    if(missionFinish)
+                    {
+                        BuffMission.setMissionStatus(3);//3 means mission finished
+                    }
+
                     try
                     {
                         missionService.updateMission(BuffMission);
                         userService.updateBnC(BuffUser.getUserId(),BuffUser.getBalance(),BuffUser.getCreditVal());
                         userService.updateBnC(currentUser.getUserId(),currentUser.getBalance(),currentUser.getCreditVal()+1);
-
+                        
                     }
                     catch (Exception e)
                     {
                         if(missionService.selectMission(BuffMission.getMissionId()).getMoney() == BuffMission.getMoney())
                         {
                             BuffMission.setMoney(BuffMission.getMoney()+aveMoney);
+                            BuffMission.setMissionStatus(mStatus);
                             missionService.updateMission(BuffMission);
                         }
                         if(userService.selectUser(BuffUser.getUserId()).getBalance() == BuffUser.getBalance())
@@ -333,10 +351,12 @@ public class TaskController {
                             userService.updateBnC(BuffUser.getUserId(),BuffUser.getBalance()-aveMoney,BuffUser.getCreditVal()-1);
                         }
 
+
                         return new ResponseEntity(new ReturnMsg("Server error : finish fail !\n"+e.getMessage()),HttpStatus.INTERNAL_SERVER_ERROR);
                     }
 
                 }
+
 
                 return new ResponseEntity(new ReturnMsg("Finish  successfully!"),HttpStatus.OK);
             }
