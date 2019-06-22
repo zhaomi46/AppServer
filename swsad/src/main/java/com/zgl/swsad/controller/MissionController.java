@@ -409,10 +409,11 @@ public class MissionController {
     @CrossOrigin
     @Authorization
     @RequestMapping(value="/missions/AllMissions", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public Object GetAllMissions() {
+    public Object GetAllMissions(@CurrentUser User currentUser) {
         ArrayList<Mission> AllMissions = missionService.selectAllMissions();
         //System.out.println("missions"+AllMissions.size());
         ArrayList<JSONObject> ReMissions = new ArrayList();
+
 
         for(int i=0; i < AllMissions.size();i++)
         {
@@ -430,8 +431,17 @@ public class MissionController {
             {
                 return new ReturnMsg("The mission"+BuffMission.getMissionId()+" have no tasks !");
             }
-            Task BuffTask = TaskFromBuffMission.get(0);
+            boolean myAccMission = false;
+            for(int ite = 0; ite < TaskFromBuffMission.size();ite++)
+            {
+                if(TaskFromBuffMission.get(ite).getAccUserId() == currentUser.getUserId())
+                {
+                    myAccMission = true;
+                    break;
+                }
+            }
 
+            Task BuffTask = TaskFromBuffMission.get(0);
 
             if(BuffTask.getTaskType() == 0)
             {
@@ -448,6 +458,7 @@ public class MissionController {
 
             User BuffUser = userService.selectUser(BuffTask.getPubUserId());
             BuffJson.put("avator",BuffUser.getAvator());
+            BuffJson.put("myAccept",myAccMission);
 
             if( !ReMissions.add(BuffJson))
             {
