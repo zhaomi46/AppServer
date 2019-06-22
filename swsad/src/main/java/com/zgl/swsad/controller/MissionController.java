@@ -55,15 +55,8 @@ public class MissionController {
             }
             mission_json.put("publishTime",date);
 
-            int userId = (int) mission_json.get("userId");//mission.getUserId();
-            if (userService.selectUser(userId) == null) {
-                return new ResponseEntity(new ReturnMsg("User not found."), HttpStatus.NOT_FOUND);
-            }
+            mission_json.put("userId",currentUser.getUserId());
 
-            if (userId != currentUser.getUserId()) {
-                return new ResponseEntity(new ReturnMsg("Unauthorized or wrong userId."), HttpStatus.UNAUTHORIZED);
-            }
-            //System.out.println("xxx");
             Mission mission = (Mission) JSONObject.toJavaObject(mission_json, Mission.class);
 
             //检测deadline在publishtime之后
@@ -98,12 +91,9 @@ public class MissionController {
             for (int count = 0; count < loopTime; count++) {
                 JSONObject task_json = param.getJSONObject("task");
                 task_json.remove("accUserId");
+                task_json.remove("finishTime");
                 task_json.put("MissionId", missionId);
-                if (task_json.get("pubUserId") != currentUser.getUserId()) {
-                    missionService.deleteMission(missionId);
-                    return new ResponseEntity(new ReturnMsg("PubUserId invalid !"), HttpStatus.UNAUTHORIZED);
-
-                }
+                task_json.put("pubUserId",currentUser.getUserId());
                 JSONObject questionare_json = param.getJSONObject("questionare");
                 JSONArray questions_json = questionare_json.getJSONArray("questions");
                 //int count = 0;
@@ -210,14 +200,7 @@ public class MissionController {
 
 
 
-        int userId = (int)mission_json.get("userId");//mission.getUserId();
-        if (userService.selectUser(userId) == null) {
-            return new ResponseEntity(new ReturnMsg("User not found."), HttpStatus.NOT_FOUND);
-        }
-
-        if (userId != currentUser.getUserId()) {
-            return new ResponseEntity(new ReturnMsg("Unauthorized or wrong userId."), HttpStatus.UNAUTHORIZED);
-        }
+        mission_json.put("userId",currentUser.getUserId());
 
 
         Mission mission = (Mission)JSONObject.toJavaObject(mission_json,Mission.class);
@@ -258,13 +241,10 @@ public class MissionController {
 
                 task_json.put("MissionId", missionId);
                 task_json.remove("accUserId");
-                //System.out.println("xxx"+missionId);
-                if (task_json.get("pubUserId") != currentUser.getUserId()) {
-                    missionService.deleteMission(missionId);
-                    return new ResponseEntity(new ReturnMsg("PubUserId invalid !"), HttpStatus.UNAUTHORIZED);
-                }
+                task_json.remove("finishTime");
+                task_json.put("pubUserId",currentUser.getUserId());
                 JSONObject errand_json = param.getJSONObject("errand");
-                //int count = 0;
+
 
                 Task task = (Task) JSONObject.toJavaObject(task_json, Task.class);
                 if (task.getTaskType() != 0) {
@@ -422,12 +402,20 @@ public class MissionController {
             for(int i=0; i < tasks.size();i++)
             {
                 Task buff = tasks.get(i);
-                if(buff.getAccUserId() != null)
+                if(buff.getTaskStatus() == 3)
                 {
                     finishNum++;
-                    System.out.println("xxx"+finishNum);
+
                 }
-                QuesList.add(questionareService.selectQuestionareByTaskID(buff.getTaskId()));
+
+                Questionare BuffQA = questionareService.selectQuestionareByTaskID(buff.getTaskId());
+                if(BuffQA == null)
+                {
+                    return new ResponseEntity(new ReturnMsg("This mission type is errand !"), HttpStatus.BAD_REQUEST);
+                }
+
+                QuesList.add(BuffQA);
+
 
             }
 
