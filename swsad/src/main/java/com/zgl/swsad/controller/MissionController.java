@@ -15,9 +15,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.zgl.swsad.config.Constants;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @RestController
 public class MissionController {
@@ -38,13 +38,22 @@ public class MissionController {
     @CrossOrigin
     @Authorization
     @RequestMapping(value="/missions/questionares", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public Object createMissionQA (@RequestBody JSONObject param, @CurrentUser User currentUser) {
+    public Object createMissionQA (@RequestBody JSONObject param, @CurrentUser User currentUser) throws ParseException {
 
 
 
             JSONObject mission_json = param.getJSONObject("mission");
-            //System.out.println("mis json" + mission_json);
-            //Mission mission = JSONObject.toJavaObject(mission_json,Mission.class);
+            Calendar calendar = Calendar.getInstance();
+            String date = calendar.get(Calendar.YEAR)+"-";
+            if(calendar.get(Calendar.MONTH)+1 < 10)
+            {
+                date = date + "0" +(calendar.get(Calendar.MONTH)+1)+"-"+calendar.get(Calendar.DAY_OF_MONTH);
+            }
+            else
+            {
+                date = date +(calendar.get(Calendar.MONTH)+1)+"-"+calendar.get(Calendar.DAY_OF_MONTH);
+            }
+            mission_json.put("publishTime",date);
 
             int userId = (int) mission_json.get("userId");//mission.getUserId();
             if (userService.selectUser(userId) == null) {
@@ -56,7 +65,22 @@ public class MissionController {
             }
             //System.out.println("xxx");
             Mission mission = (Mission) JSONObject.toJavaObject(mission_json, Mission.class);
-            //System.out.println("xxx2");
+
+            //检测deadline在publishtime之后
+            String strDeadline = mission.getDeadLine();
+            SimpleDateFormat sdf= new SimpleDateFormat("yyyy-MM-dd");
+            Date dateDeadline =sdf.parse(strDeadline);
+            Date datePublish = sdf.parse(date);
+            Calendar calDeadLine = Calendar.getInstance();
+            Calendar calPublish = Calendar.getInstance();
+            calDeadLine.setTime(dateDeadline);
+            calPublish.setTime(datePublish);
+
+            boolean validDeadline = (calDeadLine.equals(calPublish) || calDeadLine.after(calPublish));
+            if(!validDeadline)
+            {
+                return new ResponseEntity(new ReturnMsg("Deadline error !"), HttpStatus.BAD_REQUEST);
+            }
 
             int missionId = missionService.insertMission(mission);
             if (missionId == Constants.INSERT_FAIL) {
@@ -161,9 +185,23 @@ public class MissionController {
     @CrossOrigin
     @Authorization
     @RequestMapping(value="/missions/errands", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public Object createMissionER (@RequestBody JSONObject param, @CurrentUser User currentUser) {
+    public Object createMissionER (@RequestBody JSONObject param, @CurrentUser User currentUser) throws ParseException {
 
         JSONObject mission_json = param.getJSONObject("mission");
+
+        Calendar calendar = Calendar.getInstance();
+        String date = calendar.get(Calendar.YEAR)+"-";
+        if(calendar.get(Calendar.MONTH)+1 < 10)
+        {
+            date = date + "0" +(calendar.get(Calendar.MONTH)+1)+"-"+calendar.get(Calendar.DAY_OF_MONTH);
+        }
+        else
+        {
+            date = date +(calendar.get(Calendar.MONTH)+1)+"-"+calendar.get(Calendar.DAY_OF_MONTH);
+        }
+        mission_json.put("publishTime",date);
+
+
 
         int userId = (int)mission_json.get("userId");//mission.getUserId();
         if (userService.selectUser(userId) == null) {
@@ -176,6 +214,23 @@ public class MissionController {
 
 
         Mission mission = (Mission)JSONObject.toJavaObject(mission_json,Mission.class);
+
+        //检测deadline在publishtime之后
+        String strDeadline = mission.getDeadLine();
+        SimpleDateFormat sdf= new SimpleDateFormat("yyyy-MM-dd");
+        Date dateDeadline =sdf.parse(strDeadline);
+        Date datePublish = sdf.parse(date);
+        Calendar calDeadLine = Calendar.getInstance();
+        Calendar calPublish = Calendar.getInstance();
+        calDeadLine.setTime(dateDeadline);
+        calPublish.setTime(datePublish);
+
+        boolean validDeadline = (calDeadLine.equals(calPublish) || calDeadLine.after(calPublish));
+        if(!validDeadline)
+        {
+            return new ResponseEntity(new ReturnMsg("Deadline error !"), HttpStatus.BAD_REQUEST);
+        }
+
         int missionId = missionService.insertMission(mission);
         if(missionId  == Constants.INSERT_FAIL)
         {
@@ -484,6 +539,76 @@ public class MissionController {
 
         return new ResponseEntity(ReJson,HttpStatus.OK);
 
+    }
+
+
+    @CrossOrigin
+    @Authorization
+    @RequestMapping(value="/missions/{missionId}/accept", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public Object acceptMission (@PathVariable int missionId, @CurrentUser User currentUser) throws ParseException {
+        Mission mission = missionService.selectMission(missionId);
+        if(mission == null)
+        {
+            return new ResponseEntity(new ReturnMsg("The mission doesn't exist !"), HttpStatus.NOT_FOUND);
+        }
+        if(mission.getMissionStatus() == 1)//接受人数已满
+        {
+            return new ResponseEntity(new ReturnMsg("The mission has been accepted !"), HttpStatus.BAD_REQUEST);
+        }
+        else if (mission.getMissionStatus() == 2)//已过期
+        {
+            return new ResponseEntity(new ReturnMsg("The mission is over the deadline !"), HttpStatus.BAD_REQUEST);
+        }
+        Calendar calendar = Calendar.getInstance();
+
+        String  strNow = calendar.get(Calendar.YEAR)+"-"+(calendar.get(Calendar.MONTH)+1)+"-"+calendar.get(Calendar.DAY_OF_MONTH);
+        String strDeadline = mission.getDeadLine();
+        SimpleDateFormat sdf= new SimpleDateFormat("yyyy-MM-dd");
+        Date dateDeadline =sdf.parse(strDeadline);
+        Date dataNow = sdf.parse(strNow);
+        Calendar calDeadLine = Calendar.getInstance();
+        Calendar calNow = Calendar.getInstance();
+        calDeadLine.setTime(dateDeadline);
+        calNow.setTime(dataNow);
+
+        //检测是否任务已过期
+        boolean validMission = (calDeadLine.equals(calNow) || calDeadLine.after(calNow));
+        //System.out.println(calDeadLine+"xxx"+calendar);
+        if(!validMission)
+        {
+            mission.setMissionStatus(2);
+            return new ResponseEntity(new ReturnMsg("The mission is over the deadline !"), HttpStatus.BAD_REQUEST);
+        }
+
+        ArrayList<Task> Tasks = taskService.selectTaskByMissionId(missionId);
+        int i;
+        boolean acc = false;
+        for( i=0; i < Tasks.size(); i++)
+        {
+            if(Tasks.get(i).getAccUserId() == null)
+            {
+                Task buff = Tasks.get(i);
+                buff.setAccUserId(currentUser.getUserId());
+                buff.setTaskStatus(1);
+                taskService.updateTask(buff);
+                acc = true;
+                i++;
+                break;
+            }
+        }
+
+        //mission接受人数已满
+        if(i == Tasks.size() && acc == true)
+        {
+            mission.setMissionStatus(1);
+            missionService.updateMission(mission);
+        }
+
+            return new ResponseEntity(new ReturnMsg("Accept successfully !"), HttpStatus.OK);
+
+
+
+        //return new ResponseEntity(new ReturnMsg("The mission has been accepted !"), HttpStatus.BAD_REQUEST);
     }
 
 }
