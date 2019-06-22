@@ -528,6 +528,7 @@ public class MissionController {
 
             boolean myPubMission = (currentUser.getUserId() == BuffMission.getUserId());
             BuffJson.put("myPub",myPubMission);
+            BuffJson.put("aveMoney",BuffMission.getMoney()/BuffMission.getTaskNum());
 
             if( !ReMissions.add(BuffJson))
             {
