@@ -1,21 +1,15 @@
 package com.zgl.swsad.controller;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.zgl.swsad.authorization.annotation.Authorization;
 import com.zgl.swsad.authorization.annotation.CurrentUser;
-import com.zgl.swsad.mapper.QuestionareMapper;
 import com.zgl.swsad.model.*;
 import com.zgl.swsad.service.*;
 import com.zgl.swsad.util.ReturnMsg;
-import netscape.javascript.JSObject;
-import org.apache.ibatis.jdbc.Null;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -59,7 +53,7 @@ public class UserController {
         //不是当前登录用户则需要隐藏敏感信息
         if(currentUser.getUserId() != id)
             user.setPassword("");
-            user.setBalance(0.0);
+        user.setBalance(0.0);
 
         return new ResponseEntity(user, HttpStatus.OK);
 
@@ -108,7 +102,7 @@ public class UserController {
     @CrossOrigin
     @Authorization
     @RequestMapping(value = "/users/{id}", method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
-                    produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public Object modifyUser (@RequestBody User user, @CurrentUser User currentUser, @RequestParam String oldPassword){
         System.out.println(currentUser.getUserId());
         System.out.println(user.getUserId());
