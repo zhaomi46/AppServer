@@ -1,14 +1,14 @@
 package com.zgl.swsad.controller;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.zgl.swsad.authorization.annotation.Authorization;
 import com.zgl.swsad.authorization.annotation.CurrentUser;
-import com.zgl.swsad.model.Task;
-import com.zgl.swsad.model.User;
-import com.zgl.swsad.model.Mission;
-import com.zgl.swsad.service.MissionService;
-import com.zgl.swsad.service.TaskService;
-import com.zgl.swsad.service.UserService;
+import com.zgl.swsad.mapper.QuestionareMapper;
+import com.zgl.swsad.model.*;
+import com.zgl.swsad.service.*;
 import com.zgl.swsad.util.ReturnMsg;
+import netscape.javascript.JSObject;
 import org.apache.ibatis.jdbc.Null;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -35,6 +35,12 @@ public class UserController {
     @Autowired
     private MissionService missionService;
 
+    @Autowired
+    private ErrandService errandService;
+
+    @Autowired
+    private QuestionareService questionareService;
+
     /**
      * 根据userId查询用户信息
      * 获取用户之前必须要已经登录
@@ -53,7 +59,7 @@ public class UserController {
         //不是当前登录用户则需要隐藏敏感信息
         if(currentUser.getUserId() != id)
             user.setPassword("");
-            user.setBalance(0);
+            user.setBalance(0.0);
 
         return new ResponseEntity(user, HttpStatus.OK);
 
@@ -143,7 +149,28 @@ public class UserController {
             return new ResponseEntity(new ReturnMsg("User not found"), HttpStatus.NOT_FOUND);
         }
 
-        return new ResponseEntity(mission, HttpStatus.OK);
+        ArrayList<JSONObject> ReMission = new ArrayList();
+        for(int i=0; i < mission.size();i++)
+        {
+            JSONObject BuffJson = (JSONObject) JSONObject.toJSON(mission.get(i));
+            Task BuffTask = taskService.selectTaskByMissionId(mission.get(i).getMissionId()).get(0);
+            BuffJson.put("taskType",BuffTask.getTaskType());
+
+            if(BuffTask.getTaskType() == 0)
+            {
+                Errand BuffErrand = errandService.selectErrandByTaskID(BuffTask.getTaskId());
+                BuffJson.put("description",BuffErrand.getDescription());
+            }
+            else if(BuffTask.getTaskType() == 1)
+            {
+                Questionare BuffQA = questionareService.selectQuestionareByTaskID(BuffTask.getTaskId());
+                BuffJson.put("description",BuffQA.getDescription());
+            }
+
+            ReMission.add(BuffJson);
+        }
+
+        return new ResponseEntity(ReMission, HttpStatus.OK);
     }
 
     //用户通过自己的ID来获得接收的任务

@@ -237,44 +237,47 @@ public class MissionController {
             return new ResponseEntity(new ReturnMsg("Server error.mission creat fail"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        int loopTime = (int) mission_json.get("taskNum");
-        if(loopTime != 1){
-            missionService.deleteMission(missionId);
-            return new ResponseEntity(new ReturnMsg("taskNum of an errand must be 1 !"), HttpStatus.BAD_REQUEST);
-        }
+
 
         try {
-            JSONObject task_json = param.getJSONObject("task");
-
-            task_json.put("MissionId", missionId);
-            task_json.remove("accUserId");
-            //System.out.println("xxx"+missionId);
-            if (task_json.get("pubUserId") != currentUser.getUserId()) {
+            int loopTime = (int) mission_json.get("taskNum");
+            if(loopTime <= 0){
                 missionService.deleteMission(missionId);
-                return new ResponseEntity(new ReturnMsg("PubUserId invalid !"), HttpStatus.UNAUTHORIZED);
-            }
-            JSONObject errand_json = param.getJSONObject("errand");
-            int count = 0;
-
-            Task task = (Task) JSONObject.toJavaObject(task_json, Task.class);
-            if(task.getTaskType() != 0)
-            {
-                missionService.deleteMission(missionId);
-                return new ResponseEntity(new ReturnMsg("Wrong taskType !"), HttpStatus.UNAUTHORIZED);
-            }
-            int opNum1 = taskService.insertTask(task);
-            if (opNum1 == Constants.INSERT_FAIL) {
-                missionService.deleteMission(missionId);
-                return new ResponseEntity(new ReturnMsg("Task creat fail !"), HttpStatus.INTERNAL_SERVER_ERROR);
-            } else {
-                errand_json.put("taskId", opNum1);
+                return new ResponseEntity(new ReturnMsg("taskNum should be greater than 0 !"), HttpStatus.BAD_REQUEST);
             }
 
-            Errand errand = (Errand) JSONObject.toJavaObject(errand_json, Errand.class);
-            int opNum2 = errandService.insertErrand(errand);
-            if (opNum2 == Constants.INSERT_FAIL) {
-                missionService.deleteMission(missionId);
-                return new ResponseEntity(new ReturnMsg("Errand creat fail !"), HttpStatus.INTERNAL_SERVER_ERROR);
+            for(int count = 0; count < loopTime;count++) {
+                JSONObject task_json = param.getJSONObject("task");
+
+                task_json.put("MissionId", missionId);
+                task_json.remove("accUserId");
+                //System.out.println("xxx"+missionId);
+                if (task_json.get("pubUserId") != currentUser.getUserId()) {
+                    missionService.deleteMission(missionId);
+                    return new ResponseEntity(new ReturnMsg("PubUserId invalid !"), HttpStatus.UNAUTHORIZED);
+                }
+                JSONObject errand_json = param.getJSONObject("errand");
+                //int count = 0;
+
+                Task task = (Task) JSONObject.toJavaObject(task_json, Task.class);
+                if (task.getTaskType() != 0) {
+                    missionService.deleteMission(missionId);
+                    return new ResponseEntity(new ReturnMsg("Wrong taskType !"), HttpStatus.UNAUTHORIZED);
+                }
+                int opNum1 = taskService.insertTask(task);
+                if (opNum1 == Constants.INSERT_FAIL) {
+                    missionService.deleteMission(missionId);
+                    return new ResponseEntity(new ReturnMsg("Task creat fail !"), HttpStatus.INTERNAL_SERVER_ERROR);
+                } else {
+                    errand_json.put("taskId", opNum1);
+                }
+
+                Errand errand = (Errand) JSONObject.toJavaObject(errand_json, Errand.class);
+                int opNum2 = errandService.insertErrand(errand);
+                if (opNum2 == Constants.INSERT_FAIL) {
+                    missionService.deleteMission(missionId);
+                    return new ResponseEntity(new ReturnMsg("Errand creat fail !"), HttpStatus.INTERNAL_SERVER_ERROR);
+                }
             }
         }
         catch (Exception e)
@@ -614,5 +617,7 @@ public class MissionController {
 
         //return new ResponseEntity(new ReturnMsg("The mission has been accepted !"), HttpStatus.BAD_REQUEST);
     }
+
+
 
 }
