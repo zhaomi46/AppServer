@@ -606,7 +606,7 @@ public class MissionController {
     }
 
 
-    //通过taskId接受任务
+    //通过missionId接受任务
     @CrossOrigin
     @Authorization
     @RequestMapping(value="/missions/{missionId}/accept", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -618,6 +618,12 @@ public class MissionController {
         }
 
         Mission mission = missionService.selectMission(missionId);
+
+        if(mission.getUserId() == currentUser.getUserId())
+        {
+            return new ResponseEntity(new ReturnMsg("You can't accept your published task!"), HttpStatus.BAD_REQUEST);
+        }
+        
         if(mission == null)
         {
             return new ResponseEntity(new ReturnMsg("The mission doesn't exist !"), HttpStatus.NOT_FOUND);
