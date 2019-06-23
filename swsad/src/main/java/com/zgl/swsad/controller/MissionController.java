@@ -485,12 +485,16 @@ public class MissionController {
                 for(int j=0;j < AnsSum.size();j++)
                 {
                     Question QueBuff = AnsSum.get(j);
-                    //选择题
+                   //选择题
                     if(QueBuff.getQuestionType() == 0 || QueBuff.getQuestionType() == 1)
                     {
                         Question AnsIndex = Answers.get(j);
-                        AnsIndex.setAnswer(AnsIndex.getAnswer()+QueBuff.getAnswer());
-                        Answers.set(j,AnsIndex);
+                        if(QueBuff.getAnswer() != null)
+                        {
+                            AnsIndex.setAnswer(AnsIndex.getAnswer()+QueBuff.getAnswer());
+                            Answers.set(j,AnsIndex);
+                        }
+
                     }
 
 
@@ -498,8 +502,12 @@ public class MissionController {
                     if(QueBuff.getQuestionType() == 2)
                     {
                         Question AnsIndex = Answers.get(j);
-                        AnsIndex.setAnswer(AnsIndex.getAnswer()+"; "+QueBuff.getAnswer());
-                        Answers.set(j,AnsIndex);
+                        if(QueBuff.getAnswer() != null)
+                        {
+                            AnsIndex.setAnswer(AnsIndex.getAnswer()+"; "+QueBuff.getAnswer());
+                            Answers.set(j,AnsIndex);
+                        }
+
                     }
                 }
 
