@@ -57,6 +57,7 @@ public class MissionController {
             }
             mission_json.put("publishTime",date);
 
+            mission_json.put("missionStatus",0);
             mission_json.put("userId",currentUser.getUserId());
 
             Mission mission = (Mission) JSONObject.toJavaObject(mission_json, Mission.class);
@@ -95,6 +96,7 @@ public class MissionController {
                 task_json.remove("accUserId");
                 task_json.remove("finishTime");
                 task_json.put("MissionId", missionId);
+                task_json.put("taskStatus",0);
                 task_json.put("pubUserId",currentUser.getUserId());
                 JSONObject questionare_json = param.getJSONObject("questionare");
                 JSONArray questions_json = questionare_json.getJSONArray("questions");
@@ -128,6 +130,39 @@ public class MissionController {
                     JSONObject question_json = (JSONObject) questions_json.getJSONObject(i); //这里不能是get(i),get(i)只会得到键值对
                     question_json.put("questionareId", opNum2);
                     question_json.remove("answer");
+
+                    //根据queType调整choiceNum和choiceStr
+                    if((int)question_json.get("questionType") == 2)//问答题
+                    {
+                        question_json.put("choiceNum",0);
+                        question_json.remove("choiceStr");
+                    }
+                    else if((int)question_json.get("questionType") == 1)//多选
+                    {
+                        //多选应该是选多少个都行，包括1个，所以对choiceNum无更多要求
+                        if((int)question_json.get("choiceNum") == 0)
+                        {
+                            return new ResponseEntity(new ReturnMsg("ChoiceNum cannot be 0 !"), HttpStatus.BAD_REQUEST);
+                        }
+                        if(question_json.get("choiceStr") == null)
+                        {
+                            return new ResponseEntity(new ReturnMsg("choiceStr cannot be null !"), HttpStatus.BAD_REQUEST);
+                        }
+
+                    }
+                    else if((int)question_json.get("questionType") == 0)//单选
+                    {
+                        if((int)question_json.get("choiceNum") != 1)
+                        {
+                            return new ResponseEntity(new ReturnMsg("choiceNum of single-choice question must be 1 !"), HttpStatus.BAD_REQUEST);
+                        }
+                        if(question_json.get("choiceStr") == null)
+                        {
+                            return new ResponseEntity(new ReturnMsg("choiceStr cannot be null !"), HttpStatus.BAD_REQUEST);
+                        }
+                    }
+
+
                     Question question = (Question) JSONObject.toJavaObject(question_json, Question.class);
                     int opNum3 = questionService.insertQuestion(question);
                     if (opNum3 != 1) {
@@ -200,9 +235,7 @@ public class MissionController {
             date = date +(calendar.get(Calendar.MONTH)+1)+"-"+calendar.get(Calendar.DAY_OF_MONTH);
         }
         mission_json.put("publishTime",date);
-
-
-
+        mission_json.put("missionStatus",0);
         mission_json.put("userId",currentUser.getUserId());
 
 
@@ -243,6 +276,7 @@ public class MissionController {
                 JSONObject task_json = param.getJSONObject("task");
 
                 task_json.put("MissionId", missionId);
+                task_json.put("taskStatus",0);
                 task_json.remove("accUserId");
                 task_json.remove("finishTime");
                 task_json.put("pubUserId",currentUser.getUserId());

@@ -52,8 +52,10 @@ public class UserController {
 
         //不是当前登录用户则需要隐藏敏感信息
         if(currentUser.getUserId() != id)
+        {
+            user.setBalance(0.0);
             user.setPassword("");
-        user.setBalance(0.0);
+        }
 
         return new ResponseEntity(user, HttpStatus.OK);
 
