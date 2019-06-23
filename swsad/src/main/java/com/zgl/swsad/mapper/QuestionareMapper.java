@@ -16,7 +16,7 @@ public interface QuestionareMapper {
     @Select("SELECT * FROM questionare WHERE taskId = #{taskId}")
     Questionare selectQuestionareByTaskID(int id);//这里的id是taskid
 
-    @Select("SELECT * FROM questionare WHERE questionId = #{questionId}")
+    @Select("SELECT * FROM questionare WHERE questionareId = #{questionareId}")
     Questionare selectQuestionare(int id);
 
     @Delete("DELETE FROM questionare WHERE questionareId = #{questionareId}")

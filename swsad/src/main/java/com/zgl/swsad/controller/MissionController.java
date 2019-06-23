@@ -35,6 +35,8 @@ public class MissionController {
     @Autowired
     private UserService userService;
 
+
+    //新建问卷任务
     @CrossOrigin
     @Authorization
     @RequestMapping(value="/missions/questionares", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -55,15 +57,9 @@ public class MissionController {
             }
             mission_json.put("publishTime",date);
 
-            int userId = (int) mission_json.get("userId");//mission.getUserId();
-            if (userService.selectUser(userId) == null) {
-                return new ResponseEntity(new ReturnMsg("User not found."), HttpStatus.NOT_FOUND);
-            }
+            mission_json.put("missionStatus",0);
+            mission_json.put("userId",currentUser.getUserId());
 
-            if (userId != currentUser.getUserId()) {
-                return new ResponseEntity(new ReturnMsg("Unauthorized or wrong userId."), HttpStatus.UNAUTHORIZED);
-            }
-            //System.out.println("xxx");
             Mission mission = (Mission) JSONObject.toJavaObject(mission_json, Mission.class);
 
             //检测deadline在publishtime之后
@@ -98,17 +94,13 @@ public class MissionController {
             for (int count = 0; count < loopTime; count++) {
                 JSONObject task_json = param.getJSONObject("task");
                 task_json.remove("accUserId");
+                task_json.remove("finishTime");
                 task_json.put("MissionId", missionId);
-                if (task_json.get("pubUserId") != currentUser.getUserId()) {
-                    missionService.deleteMission(missionId);
-                    return new ResponseEntity(new ReturnMsg("PubUserId invalid !"), HttpStatus.UNAUTHORIZED);
-
-                }
+                task_json.put("taskStatus",0);
+                task_json.put("pubUserId",currentUser.getUserId());
                 JSONObject questionare_json = param.getJSONObject("questionare");
                 JSONArray questions_json = questionare_json.getJSONArray("questions");
-                //int count = 0;
-                //int num =  questionare_json.size() - 3;
-                //注意这里的questionare_size得到的长度不是以JsonObject作为单位，而是以键值对作为单位,所以还要加上前面的3个键值对
+                questionare_json.put("questionNum",questions_json.size());
 
                 Task task = (Task) JSONObject.toJavaObject(task_json, Task.class);
 
@@ -137,6 +129,40 @@ public class MissionController {
                 for (int i = 0; i < questions_json.size(); i++) {
                     JSONObject question_json = (JSONObject) questions_json.getJSONObject(i); //这里不能是get(i),get(i)只会得到键值对
                     question_json.put("questionareId", opNum2);
+                    question_json.remove("answer");
+
+                    //根据queType调整choiceNum和choiceStr
+                    if((int)question_json.get("questionType") == 2)//问答题
+                    {
+                        question_json.put("choiceNum",0);
+                        question_json.remove("choiceStr");
+                    }
+                    else if((int)question_json.get("questionType") == 1)//多选
+                    {
+                        //多选应该是选多少个都行，包括1个，所以对choiceNum无更多要求
+                        if((int)question_json.get("choiceNum") == 0)
+                        {
+                            return new ResponseEntity(new ReturnMsg("ChoiceNum cannot be 0 !"), HttpStatus.BAD_REQUEST);
+                        }
+                        if(question_json.get("choiceStr") == null)
+                        {
+                            return new ResponseEntity(new ReturnMsg("choiceStr cannot be null !"), HttpStatus.BAD_REQUEST);
+                        }
+
+                    }
+                    else if((int)question_json.get("questionType") == 0)//单选
+                    {
+                        if((int)question_json.get("choiceNum") != 1)
+                        {
+                            return new ResponseEntity(new ReturnMsg("choiceNum of single-choice question must be 1 !"), HttpStatus.BAD_REQUEST);
+                        }
+                        if(question_json.get("choiceStr") == null)
+                        {
+                            return new ResponseEntity(new ReturnMsg("choiceStr cannot be null !"), HttpStatus.BAD_REQUEST);
+                        }
+                    }
+
+
                     Question question = (Question) JSONObject.toJavaObject(question_json, Question.class);
                     int opNum3 = questionService.insertQuestion(question);
                     if (opNum3 != 1) {
@@ -153,35 +179,44 @@ public class MissionController {
             return new ResponseEntity(new ReturnMsg("Error: creat fail !\n"+e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
+        User user = userService.selectUser(mission.getUserId());
+        if(user.getBalance()-mission.getMoney() < 0)
+        {
+            missionService.deleteMission(missionId);
+            return new ResponseEntity(new ReturnMsg("Your balance is not enough!"), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        userService.updateBnC(user.getUserId(),user.getBalance()-mission.getMoney(),user.getCreditVal()+1);
         return new ResponseEntity(new ReturnMsg("create task successfully!"), HttpStatus.OK);
 
 
     }
 
-    @CrossOrigin
-    @Authorization
-    @RequestMapping(value="/missions", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public Object createMission (@RequestBody Mission mission, @CurrentUser User currentUser) {
-        int userId = mission.getUserId();
-        if (userService.selectUser(userId) == null) {
-            return new ResponseEntity(new ReturnMsg("User not found."), HttpStatus.NOT_FOUND);
-        }
+    //新建mission
+//    @CrossOrigin
+//    @Authorization
+//    @RequestMapping(value="/missions", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+//    public Object createMission (@RequestBody Mission mission, @CurrentUser User currentUser) {
+//        int userId = mission.getUserId();
+//        if (userService.selectUser(userId) == null) {
+//            return new ResponseEntity(new ReturnMsg("User not found."), HttpStatus.NOT_FOUND);
+//        }
+//
+//        if (mission.getUserId() != currentUser.getUserId()) {
+//            return new ResponseEntity(new ReturnMsg("Unauthorized."), HttpStatus.UNAUTHORIZED);
+//        }
+//
+//        int missionId = missionService.insertMission(mission);
+//        if(missionId  != Constants.INSERT_FAIL)
+//        {
+//            Mission newMission = missionService.selectMission(missionId);
+//            return new ResponseEntity(newMission, HttpStatus.CREATED);
+//        }  else {
+//            return new ResponseEntity(new ReturnMsg("Server error."), HttpStatus.INTERNAL_SERVER_ERROR);
+//        }
+//
+//    }
 
-        if (mission.getUserId() != currentUser.getUserId()) {
-            return new ResponseEntity(new ReturnMsg("Unauthorized."), HttpStatus.UNAUTHORIZED);
-        }
-
-        int missionId = missionService.insertMission(mission);
-        if(missionId  != Constants.INSERT_FAIL)
-        {
-            Mission newMission = missionService.selectMission(missionId);
-            return new ResponseEntity(newMission, HttpStatus.CREATED);
-        }  else {
-            return new ResponseEntity(new ReturnMsg("Server error."), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
-    }
-
+    //新建errand任务
     @CrossOrigin
     @Authorization
     @RequestMapping(value="/missions/errands", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -200,17 +235,8 @@ public class MissionController {
             date = date +(calendar.get(Calendar.MONTH)+1)+"-"+calendar.get(Calendar.DAY_OF_MONTH);
         }
         mission_json.put("publishTime",date);
-
-
-
-        int userId = (int)mission_json.get("userId");//mission.getUserId();
-        if (userService.selectUser(userId) == null) {
-            return new ResponseEntity(new ReturnMsg("User not found."), HttpStatus.NOT_FOUND);
-        }
-
-        if (userId != currentUser.getUserId()) {
-            return new ResponseEntity(new ReturnMsg("Unauthorized or wrong userId."), HttpStatus.UNAUTHORIZED);
-        }
+        mission_json.put("missionStatus",0);
+        mission_json.put("userId",currentUser.getUserId());
 
 
         Mission mission = (Mission)JSONObject.toJavaObject(mission_json,Mission.class);
@@ -237,44 +263,45 @@ public class MissionController {
             return new ResponseEntity(new ReturnMsg("Server error.mission creat fail"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        int loopTime = (int) mission_json.get("taskNum");
-        if(loopTime != 1){
-            missionService.deleteMission(missionId);
-            return new ResponseEntity(new ReturnMsg("taskNum of an errand must be 1 !"), HttpStatus.BAD_REQUEST);
-        }
+
 
         try {
-            JSONObject task_json = param.getJSONObject("task");
-
-            task_json.put("MissionId", missionId);
-            task_json.remove("accUserId");
-            //System.out.println("xxx"+missionId);
-            if (task_json.get("pubUserId") != currentUser.getUserId()) {
+            int loopTime = (int) mission_json.get("taskNum");
+            if(loopTime <= 0){
                 missionService.deleteMission(missionId);
-                return new ResponseEntity(new ReturnMsg("PubUserId invalid !"), HttpStatus.UNAUTHORIZED);
-            }
-            JSONObject errand_json = param.getJSONObject("errand");
-            int count = 0;
-
-            Task task = (Task) JSONObject.toJavaObject(task_json, Task.class);
-            if(task.getTaskType() != 0)
-            {
-                missionService.deleteMission(missionId);
-                return new ResponseEntity(new ReturnMsg("Wrong taskType !"), HttpStatus.UNAUTHORIZED);
-            }
-            int opNum1 = taskService.insertTask(task);
-            if (opNum1 == Constants.INSERT_FAIL) {
-                missionService.deleteMission(missionId);
-                return new ResponseEntity(new ReturnMsg("Task creat fail !"), HttpStatus.INTERNAL_SERVER_ERROR);
-            } else {
-                errand_json.put("taskId", opNum1);
+                return new ResponseEntity(new ReturnMsg("taskNum should be greater than 0 !"), HttpStatus.BAD_REQUEST);
             }
 
-            Errand errand = (Errand) JSONObject.toJavaObject(errand_json, Errand.class);
-            int opNum2 = errandService.insertErrand(errand);
-            if (opNum2 == Constants.INSERT_FAIL) {
-                missionService.deleteMission(missionId);
-                return new ResponseEntity(new ReturnMsg("Errand creat fail !"), HttpStatus.INTERNAL_SERVER_ERROR);
+            for(int count = 0; count < loopTime;count++) {
+                JSONObject task_json = param.getJSONObject("task");
+
+                task_json.put("MissionId", missionId);
+                task_json.put("taskStatus",0);
+                task_json.remove("accUserId");
+                task_json.remove("finishTime");
+                task_json.put("pubUserId",currentUser.getUserId());
+                JSONObject errand_json = param.getJSONObject("errand");
+
+
+                Task task = (Task) JSONObject.toJavaObject(task_json, Task.class);
+                if (task.getTaskType() != 0) {
+                    missionService.deleteMission(missionId);
+                    return new ResponseEntity(new ReturnMsg("Wrong taskType !"), HttpStatus.UNAUTHORIZED);
+                }
+                int opNum1 = taskService.insertTask(task);
+                if (opNum1 == Constants.INSERT_FAIL) {
+                    missionService.deleteMission(missionId);
+                    return new ResponseEntity(new ReturnMsg("Task creat fail !"), HttpStatus.INTERNAL_SERVER_ERROR);
+                } else {
+                    errand_json.put("taskId", opNum1);
+                }
+
+                Errand errand = (Errand) JSONObject.toJavaObject(errand_json, Errand.class);
+                int opNum2 = errandService.insertErrand(errand);
+                if (opNum2 == Constants.INSERT_FAIL) {
+                    missionService.deleteMission(missionId);
+                    return new ResponseEntity(new ReturnMsg("Errand creat fail !"), HttpStatus.INTERNAL_SERVER_ERROR);
+                }
             }
         }
         catch (Exception e)
@@ -282,14 +309,23 @@ public class MissionController {
             e.printStackTrace();
             System.out.println("尝试回滚！");
             missionService.deleteMission(missionId);
-            return new ResponseEntity(new ReturnMsg("Error: creat fail !"+e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity(new ReturnMsg("Error: creat fail !\n"+e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
+
+        User user = userService.selectUser(mission.getUserId());
+        if(user.getBalance()-mission.getMoney() < 0)
+        {
+            missionService.deleteMission(missionId);
+            return new ResponseEntity(new ReturnMsg("Your balance is not enough!"), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        userService.updateBnC(user.getUserId(),user.getBalance()-mission.getMoney(),user.getCreditVal()+1);
         return new ResponseEntity(new ReturnMsg("create task successfully!"), HttpStatus.OK);
 
 
     }
 
+    //得到所有的mission
     @CrossOrigin
     @RequestMapping(value="/missions", method=RequestMethod.GET,  produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public Object getAllMissions() {
@@ -297,6 +333,7 @@ public class MissionController {
         return new ResponseEntity(missions, HttpStatus.OK);
     }
 
+    //通过missionId查找mission
     @CrossOrigin
     @RequestMapping(value="/missions/{missionId}", method=RequestMethod.GET,  produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public Object getMissionById(@PathVariable int missionId) {
@@ -309,51 +346,54 @@ public class MissionController {
         return new ResponseEntity(mission, HttpStatus.OK);
     }
 
-    @CrossOrigin
-    @Authorization
-    @RequestMapping(value = "/missions/{missionId}", method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    //missionId和userId不需要传过来
-    public Object modifyMission(@RequestBody Mission mission, @PathVariable int missionId, @CurrentUser User currentUser) {
-        Mission curMission = missionService.selectMission(missionId);
-        if (curMission == null) {
-            return new ResponseEntity(new ReturnMsg("Mission not found!"), HttpStatus.NOT_FOUND);
-        }
+    //通过missionId修改mission
+//    @CrossOrigin
+//    @Authorization
+//    @RequestMapping(value = "/missions/{missionId}", method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+//    //missionId和userId不需要传过来
+//    public Object modifyMission(@RequestBody Mission mission, @PathVariable int missionId, @CurrentUser User currentUser) {
+//        Mission curMission = missionService.selectMission(missionId);
+//        if (curMission == null) {
+//            return new ResponseEntity(new ReturnMsg("Mission not found!"), HttpStatus.NOT_FOUND);
+//        }
+//
+//        if (curMission.getUserId() != currentUser.getUserId()) {
+//            return  new ResponseEntity(new ReturnMsg("Unanthorized, this is not your mission."), HttpStatus.UNAUTHORIZED);
+//        }
+//
+//        mission.setMissionId(missionId);
+//        mission.setUserId(curMission.getUserId());
+//        int count = missionService.updateMission(mission);
+//        if (count == 1) {
+//            return  new ResponseEntity(new ReturnMsg("Modify mission success."), HttpStatus.OK);
+//        }
+//
+//        return new ResponseEntity(new ReturnMsg("Server error."), HttpStatus.INTERNAL_SERVER_ERROR);
+//    }
 
-        if (curMission.getUserId() != currentUser.getUserId()) {
-            return  new ResponseEntity(new ReturnMsg("Unanthorized, this is not your mission."), HttpStatus.UNAUTHORIZED);
-        }
-
-        mission.setMissionId(missionId);
-        mission.setUserId(curMission.getUserId());
-        int count = missionService.updateMission(mission);
-        if (count == 1) {
-            return  new ResponseEntity(new ReturnMsg("Modify mission success."), HttpStatus.OK);
-        }
-
-        return new ResponseEntity(new ReturnMsg("Server error."), HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
-    @CrossOrigin
-    @Authorization
-    @RequestMapping(value = "/missions/{missionId}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public Object deleteMission(@PathVariable int missionId, @CurrentUser User currentUser) {
-        Mission curMission = missionService.selectMission(missionId);
-        if (curMission == null) {
-            return new ResponseEntity(new ReturnMsg("Mission not found!"), HttpStatus.NOT_FOUND);
-        }
-
-        if (curMission.getUserId() != currentUser.getUserId()) {
-            return new ResponseEntity(new ReturnMsg("Unauthorized, this is not your mission."), HttpStatus.UNAUTHORIZED);
-        }
-
-        int count = missionService.deleteMission(missionId);
-        if (count == 1) {
-            return  new ResponseEntity(new ReturnMsg("Delete mission success."), HttpStatus.OK);
-        }
-        return new ResponseEntity(new ReturnMsg("Server error."), HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+    //通过missionId删除mission
+//    @CrossOrigin
+//    @Authorization
+//    @RequestMapping(value = "/missions/{missionId}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+//    public Object deleteMission(@PathVariable int missionId, @CurrentUser User currentUser) {
+//        Mission curMission = missionService.selectMission(missionId);
+//        if (curMission == null) {
+//            return new ResponseEntity(new ReturnMsg("Mission not found!"), HttpStatus.NOT_FOUND);
+//        }
+//
+//        if (curMission.getUserId() != currentUser.getUserId()) {
+//            return new ResponseEntity(new ReturnMsg("Unauthorized, this is not your mission."), HttpStatus.UNAUTHORIZED);
+//        }
+//
+//        int count = missionService.deleteMission(missionId);
+//        if (count == 1) {
+//            return  new ResponseEntity(new ReturnMsg("Delete mission success."), HttpStatus.OK);
+//        }
+//        return new ResponseEntity(new ReturnMsg("Server error."), HttpStatus.INTERNAL_SERVER_ERROR);
+//    }
 
 
+    //通过missionId返回对应的所有task
     @CrossOrigin
     @Authorization
     @RequestMapping(value="/missions/{missionId}/tasks", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -363,18 +403,27 @@ public class MissionController {
             return new ResponseEntity(new ReturnMsg("Mission not found!"), HttpStatus.NOT_FOUND);
         }
 
-        if (mission.getUserId() != currentUser.getUserId()) {
-            return new ResponseEntity(new ReturnMsg("Unauthorized, these tasks are not yours."), HttpStatus.UNAUTHORIZED);
+        if (mission.getUserId() == currentUser.getUserId()) {
+            ArrayList<Task> tasks = missionService.selectTasksByMissionId(missionId);
+            return new ResponseEntity(tasks, HttpStatus.OK);
+        } else {
+            ArrayList<Task> tasks = missionService.selectTasksByMissionId(missionId);
+            ArrayList<Task> ret = new ArrayList<Task>();
+            for (Task t : tasks) {
+                if (t.getAccUserId() == currentUser.getUserId()) {
+                    ret.add(t);
+                }
+            }
+            if (ret.size() != 0) {
+                return new ResponseEntity(ret, HttpStatus.OK);
+            }
         }
 
-        ArrayList<Task> tasks = missionService.selectTasksByMissionId(missionId);
-        if (tasks != null) {
-            return new ResponseEntity(tasks, HttpStatus.OK);
-        }
-        return new ResponseEntity(new ReturnMsg("Server error."), HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity(new ReturnMsg("Unauthorized."), HttpStatus.UNAUTHORIZED);
     }
 
 
+    //通过missionId返回问卷完成情况
     @CrossOrigin
     @Authorization
     @RequestMapping(value="/missions/{missionId}/QAsummary", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -396,20 +445,26 @@ public class MissionController {
         ReSum.put("finishNum",0);
 
         ArrayList<Task> tasks = missionService.selectTasksByMissionId(missionId);
-        //return new ResponseEntity(tasks,HttpStatus.OK);
         int finishNum = 0;
         ArrayList<Questionare> QuesList = new ArrayList<Questionare>();
-        //System.out.println("tasksize"+tasks.size()+"listsize"+QuesList.size());
         if (tasks != null) {
             for(int i=0; i < tasks.size();i++)
             {
                 Task buff = tasks.get(i);
-                if(buff.getAccUserId() != null)
+                if(buff.getTaskStatus() == 3)
                 {
                     finishNum++;
-                    System.out.println("xxx"+finishNum);
+
                 }
-                QuesList.add(questionareService.selectQuestionareByTaskID(buff.getTaskId()));
+
+                Questionare BuffQA = questionareService.selectQuestionareByTaskID(buff.getTaskId());
+                if(BuffQA == null)
+                {
+                    return new ResponseEntity(new ReturnMsg("This mission type is errand !"), HttpStatus.BAD_REQUEST);
+                }
+
+                QuesList.add(BuffQA);
+
 
             }
 
@@ -462,16 +517,12 @@ public class MissionController {
             Ans.add(Que);
         }
         ReSum.put("questions",Ans);
-        //String questionareList_str = JSONObject.toJSONString(QuesList);
         ReSum.put("finishNum",finishNum);
 
         return new ResponseEntity(ReSum,HttpStatus.OK);
-
-
-
-    //return 0;
     }
 
+    //返回所有的mission以及task详情
     @CrossOrigin
     @Authorization
     @RequestMapping(value="/missions/AllMissions", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -507,6 +558,15 @@ public class MissionController {
                 }
             }
 
+            int finishNum = 0;
+            for(int k=0;k < TaskFromBuffMission.size();k++)
+            {
+                if(TaskFromBuffMission.get(k).getTaskStatus() == 3)
+                {
+                    finishNum++;
+                }
+            }
+
             Task BuffTask = TaskFromBuffMission.get(0);
 
             if(BuffTask.getTaskType() == 0)
@@ -528,7 +588,7 @@ public class MissionController {
 
             boolean myPubMission = (currentUser.getUserId() == BuffMission.getUserId());
             BuffJson.put("myPub",myPubMission);
-            BuffJson.put("aveMoney",BuffMission.getMoney()/BuffMission.getTaskNum());
+            BuffJson.put("aveMoney",BuffMission.getMoney()/(BuffMission.getTaskNum()-finishNum) );
 
             if( !ReMissions.add(BuffJson))
             {
@@ -546,10 +606,17 @@ public class MissionController {
     }
 
 
+    //通过taskId接受任务
     @CrossOrigin
     @Authorization
     @RequestMapping(value="/missions/{missionId}/accept", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public Object acceptMission (@PathVariable int missionId, @CurrentUser User currentUser) throws ParseException {
+
+        if(currentUser.getCreditVal() < 0)
+        {
+            return new ResponseEntity(new ReturnMsg("Sorry, the least credit value to accept task is 0 !"), HttpStatus.NOT_FOUND);
+        }
+
         Mission mission = missionService.selectMission(missionId);
         if(mission == null)
         {
@@ -614,5 +681,7 @@ public class MissionController {
 
         //return new ResponseEntity(new ReturnMsg("The mission has been accepted !"), HttpStatus.BAD_REQUEST);
     }
+
+
 
 }
