@@ -18,6 +18,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -307,6 +308,9 @@ public class TaskController {
             if(BuffTask.getTaskStatus() == 2)
             {
                 BuffTask.setTaskStatus(3);
+                Calendar calendar = Calendar.getInstance();
+                String  strNow = calendar.get(Calendar.YEAR)+"-"+(calendar.get(Calendar.MONTH)+1)+"-"+calendar.get(Calendar.DAY_OF_MONTH);
+                BuffTask.setFinishTime(strNow);
                 if(taskService.updateTask(BuffTask) == 1)
                 {
                     Mission BuffMission = missionService.selectMission(BuffTask.getMissionId());
@@ -506,7 +510,11 @@ public class TaskController {
 
 
         //打钱 更新状态
+        Calendar calendar = Calendar.getInstance();
+        String  strNow = calendar.get(Calendar.YEAR)+"-"+(calendar.get(Calendar.MONTH)+1)+"-"+calendar.get(Calendar.DAY_OF_MONTH);
+        BuffTask.setFinishTime(strNow);
         BuffTask.setTaskStatus(3);
+
         taskService.updateTask(BuffTask);
 
         Mission BuffMission = missionService.selectMission(BuffTask.getMissionId());
