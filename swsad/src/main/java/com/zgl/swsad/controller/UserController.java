@@ -179,12 +179,47 @@ public class UserController {
             return new ResponseEntity(new ReturnMsg("Invalid id supplied"), HttpStatus.BAD_REQUEST);
         }
 
-        ArrayList<Task> task = taskService.selectTaskByAccUserID(userId);
+        ArrayList<Task> tasks = taskService.selectTaskByAccUserID(userId);
 
-        if (task == null) {
+        if (tasks == null) {
             return new ResponseEntity(new ReturnMsg("User not found"), HttpStatus.NOT_FOUND);
         }
 
-        return new ResponseEntity(task, HttpStatus.OK);
+        ArrayList<JSONObject> ReTask = new ArrayList<>();
+        for(int i=0; i < tasks.size();i++)
+        {
+            JSONObject BuffJson = (JSONObject) JSONObject.toJSON(tasks.get(i));
+            Mission BuffMission = missionService.selectMission(tasks.get(i).getMissionId());
+            BuffJson.put("publishTime",BuffMission.getPublishTime());
+            BuffJson.put("deadLine",BuffMission.getDeadLine());
+            BuffJson.put("title",BuffMission.getTitle());
+
+            int finishNum = 0;
+            ArrayList<Task> taskFromMission = taskService.selectTaskByMissionId(BuffMission.getMissionId());
+            for(int j=0; j < taskFromMission.size();j++)
+            {
+                if(taskFromMission.get(j).getTaskStatus() == 3)
+                {
+                    finishNum++;
+                }
+            }
+            BuffJson.put("aveMoney",BuffMission.getMoney()/(BuffMission.getTaskNum()-finishNum));
+
+            if(tasks.get(i).getTaskType() == 0)
+            {
+                Errand BuffErrand = errandService.selectErrandByTaskID(tasks.get(i).getTaskId());
+                BuffJson.put("description",BuffErrand.getDescription());
+            }
+            else if(tasks.get(i).getTaskType() == 1)
+            {
+                Questionare BuffQA = questionareService.selectQuestionareByTaskID(tasks.get(i).getTaskId());
+                BuffJson.put("description",BuffQA.getDescription());
+            }
+
+            ReTask.add(BuffJson);
+        }
+
+
+        return new ResponseEntity(ReTask, HttpStatus.OK);
     }
 }
