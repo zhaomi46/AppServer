@@ -4,9 +4,7 @@ public class Errand {
 
     private Integer errandId;
     private String description;
-
-
-
+    private String privateInfo;
     private String pic;
     private Integer taskId;
 
@@ -43,4 +41,11 @@ public class Errand {
     }
 
 
+    public String getPrivateInfo() {
+        return privateInfo;
+    }
+
+    public void setPrivateInfo(String privateInfo) {
+        this.privateInfo = privateInfo;
+    }
 }

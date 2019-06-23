@@ -403,15 +403,23 @@ public class MissionController {
             return new ResponseEntity(new ReturnMsg("Mission not found!"), HttpStatus.NOT_FOUND);
         }
 
-        if (mission.getUserId() != currentUser.getUserId()) {
-            return new ResponseEntity(new ReturnMsg("Unauthorized, these tasks are not yours."), HttpStatus.UNAUTHORIZED);
+        if (mission.getUserId() == currentUser.getUserId()) {
+            ArrayList<Task> tasks = missionService.selectTasksByMissionId(missionId);
+            return new ResponseEntity(tasks, HttpStatus.OK);
+        } else {
+            ArrayList<Task> tasks = missionService.selectTasksByMissionId(missionId);
+            ArrayList<Task> ret = new ArrayList<Task>();
+            for (Task t : tasks) {
+                if (t.getAccUserId() == currentUser.getUserId()) {
+                    ret.add(t);
+                }
+            }
+            if (ret.size() != 0) {
+                return new ResponseEntity(ret, HttpStatus.OK);
+            }
         }
 
-        ArrayList<Task> tasks = missionService.selectTasksByMissionId(missionId);
-        if (tasks != null) {
-            return new ResponseEntity(tasks, HttpStatus.OK);
-        }
-        return new ResponseEntity(new ReturnMsg("Server error."), HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity(new ReturnMsg("Unauthorized."), HttpStatus.UNAUTHORIZED);
     }
 
 
