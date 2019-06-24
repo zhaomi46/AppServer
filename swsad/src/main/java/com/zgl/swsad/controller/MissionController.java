@@ -62,6 +62,12 @@ public class MissionController {
 
             Mission mission = (Mission) JSONObject.toJavaObject(mission_json, Mission.class);
 
+            if(currentUser.getBalance()-mission.getMoney() < 0)
+            {
+                //missionService.deleteMission(missionId);
+                return new ResponseEntity(new ReturnMsg("Your balance is not enough!"), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
             //检测deadline在publishtime之后
             String strDeadline = mission.getDeadLine();
             SimpleDateFormat sdf= new SimpleDateFormat("yyyy-MM-dd");
@@ -180,11 +186,7 @@ public class MissionController {
         }
 
         User user = userService.selectUser(mission.getUserId());
-        if(user.getBalance()-mission.getMoney() < 0)
-        {
-            missionService.deleteMission(missionId);
-            return new ResponseEntity(new ReturnMsg("Your balance is not enough!"), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+
         userService.updateBnC(user.getUserId(),user.getBalance()-mission.getMoney(),user.getCreditVal()+1);
         return new ResponseEntity(new ReturnMsg("create task successfully!"), HttpStatus.OK);
 
@@ -240,6 +242,12 @@ public class MissionController {
 
 
         Mission mission = (Mission)JSONObject.toJavaObject(mission_json,Mission.class);
+
+        if(currentUser.getBalance()-mission.getMoney() < 0)
+        {
+            //missionService.deleteMission(missionId);
+            return new ResponseEntity(new ReturnMsg("Your balance is not enough!"), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
 
         //检测deadline在publishtime之后
         String strDeadline = mission.getDeadLine();
@@ -314,11 +322,7 @@ public class MissionController {
 
 
         User user = userService.selectUser(mission.getUserId());
-        if(user.getBalance()-mission.getMoney() < 0)
-        {
-            missionService.deleteMission(missionId);
-            return new ResponseEntity(new ReturnMsg("Your balance is not enough!"), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        
         userService.updateBnC(user.getUserId(),user.getBalance()-mission.getMoney(),user.getCreditVal()+1);
         return new ResponseEntity(new ReturnMsg("create task successfully!"), HttpStatus.OK);
 
