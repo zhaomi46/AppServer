@@ -2,21 +2,13 @@ package com.zgl.swsad.model;
 
 public class Question {
 
-    private int questionId;
-    private int questionType;
+    private Integer questionId;
+    private Integer questionType;
     private String question;
     private String answer;
-    private int choiceNum; // ?
+    private Integer choiceNum; // ?
     private String choiceStr; //这个变量是干啥的？
-    private int questionareId;
-
-    public Integer getQuestionId() {
-        return questionId;
-    }
-
-    public void setQuestionId(Integer questionId) {
-        this.questionId = questionId;
-    }
+    private Integer questionareId;
 
     public Integer getQuestionType() {
         return questionType;
@@ -42,12 +34,12 @@ public class Question {
         this.answer = answer;
     }
 
-    public Integer getChoicenum() {
+    public Integer getChoiceNum() {
         return choiceNum;
     }
 
-    public void setChoicenum(Integer choicenum) {
-        this.choiceNum = choicenum;
+    public void setChoiceNum(Integer choiceNum) {
+        this.choiceNum = choiceNum;
     }
 
     public String getChoiceStr() {
@@ -66,5 +58,12 @@ public class Question {
         this.questionareId = questionareId;
     }
 
+    public Integer getQuestionId() {
+        return questionId;
+    }
+
+    public void setQuestionId(Integer questionId) {
+        this.questionId = questionId;
+    }
 }
 
