@@ -43,4 +43,7 @@ public class UserService {
     public int deleteUser(int id){
         return userMapper.deleteUser(id);
     }
+
+    //update balance and creditVal
+    public  int updateBnC(int userId,double balance,int creditVal){return userMapper.updateBnC(userId,balance,creditVal);}
 }

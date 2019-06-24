@@ -38,10 +38,11 @@ public class Constants {
     public static final int FEMALE = 1;
 
     //Mission类
-    //missionStatus的四个状态依次对应为：完成此任务的人数还不够、能接受此任务的人数已达上限、发布的任务过期、
+    //missionStatus的四个状态依次对应为：完成此任务的人数还不够、能接受此任务的人数已达上限、发布的任务过期、发布的任务被领取完且全被完成
     public static final int NEED_MORE_PEOPLE = 0;
     public static final int MAX_PEOPLE = 1;
     public static final int OVERDUE = 2;
+    public static final int MAX_PEOPLE_DONE = 3;
 
     //Task类
     //taskSatus的四个状态，依次对应为：此任务未被人接收、此任务已被人接收且正在执行、此任务已被接收者执行完毕但发布者还未确认、此任务已被上方确认完成

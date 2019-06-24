@@ -37,6 +37,9 @@ public interface UserMapper {
             " tags=#{tags}, password=#{password} where userId=#{userId}")
     int updateUser(User user);
 
+    @Update("update user set balance=#{balance},creditVal = #{creditVal} where userId=#{userId}")
+    int updateBnC(int userId,double balance,int creditVal);
+
     @Delete("DELETE FROM user where userId=#{userId}")
     int deleteUser(int id);
 }

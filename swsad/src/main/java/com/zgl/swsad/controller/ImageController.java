@@ -20,7 +20,9 @@ public class ImageController {
             new ResponseEntity(new ReturnMsg("uploadimg fail"), HttpStatus.BAD_REQUEST);
         }
         String contentType = file.getContentType();
-        String fileName = UUID.randomUUID().toString().replaceAll("-", "");
+        String old_fileName = file.getOriginalFilename();
+        String type = old_fileName.substring(old_fileName.indexOf('.'));
+        String fileName = UUID.randomUUID().toString().replaceAll("-", "") + type;
         try {
             FileUtil.uploadFile(file.getBytes(), Constants.IMAGEPATH, fileName);
             System.out.println(contentType + fileName);
