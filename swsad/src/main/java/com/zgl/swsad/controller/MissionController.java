@@ -62,6 +62,12 @@ public class MissionController {
 
             Mission mission = (Mission) JSONObject.toJavaObject(mission_json, Mission.class);
 
+            if(currentUser.getBalance()-mission.getMoney() < 0)
+            {
+                //missionService.deleteMission(missionId);
+                return new ResponseEntity(new ReturnMsg("Your balance is not enough!"), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
             //检测deadline在publishtime之后
             String strDeadline = mission.getDeadLine();
             SimpleDateFormat sdf= new SimpleDateFormat("yyyy-MM-dd");
@@ -180,11 +186,7 @@ public class MissionController {
         }
 
         User user = userService.selectUser(mission.getUserId());
-        if(user.getBalance()-mission.getMoney() < 0)
-        {
-            missionService.deleteMission(missionId);
-            return new ResponseEntity(new ReturnMsg("Your balance is not enough!"), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+
         userService.updateBnC(user.getUserId(),user.getBalance()-mission.getMoney(),user.getCreditVal()+1);
         return new ResponseEntity(new ReturnMsg("create task successfully!"), HttpStatus.OK);
 
@@ -240,6 +242,12 @@ public class MissionController {
 
 
         Mission mission = (Mission)JSONObject.toJavaObject(mission_json,Mission.class);
+
+        if(currentUser.getBalance()-mission.getMoney() < 0)
+        {
+            //missionService.deleteMission(missionId);
+            return new ResponseEntity(new ReturnMsg("Your balance is not enough!"), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
 
         //检测deadline在publishtime之后
         String strDeadline = mission.getDeadLine();
@@ -314,11 +322,7 @@ public class MissionController {
 
 
         User user = userService.selectUser(mission.getUserId());
-        if(user.getBalance()-mission.getMoney() < 0)
-        {
-            missionService.deleteMission(missionId);
-            return new ResponseEntity(new ReturnMsg("Your balance is not enough!"), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+
         userService.updateBnC(user.getUserId(),user.getBalance()-mission.getMoney(),user.getCreditVal()+1);
         return new ResponseEntity(new ReturnMsg("create task successfully!"), HttpStatus.OK);
 
@@ -471,13 +475,18 @@ public class MissionController {
         }
         ArrayList<Question> Answers = questionService.selectQuestionByQuestionareID(QuesList.get(0).getQuestionareId());
 
+        for(int i=0; i < Answers.size();i++)
+        {
+            Answers.get(i).setAnswer("");
+        }
+
         //初始化格式
         ReSum.put("QATitle",QuesList.get(0).getTitle());
         ReSum.put("QADes",QuesList.get(0).getDescription());
 
         if(QuesList != null)
         {
-            for(int i=1; i < QuesList.size();i++)
+            for(int i=0; i < QuesList.size();i++)
             {
                 Questionare Ques = QuesList.get(i);
 
@@ -489,8 +498,14 @@ public class MissionController {
                     if(QueBuff.getQuestionType() == 0 || QueBuff.getQuestionType() == 1)
                     {
                         Question AnsIndex = Answers.get(j);
-                        AnsIndex.setAnswer(AnsIndex.getAnswer()+QueBuff.getAnswer());
-                        Answers.set(j,AnsIndex);
+                        //AnsIndex.setAnswer("");
+                        //System.out.println("ans"+AnsIndex.getAnswer()+" QueBuff"+QueBuff.getAnswer());
+                        if(QueBuff.getAnswer() != null)
+                        {
+                            AnsIndex.setAnswer(AnsIndex.getAnswer()+QueBuff.getAnswer());
+                            Answers.set(j,AnsIndex);
+                        }
+
                     }
 
 
@@ -498,8 +513,14 @@ public class MissionController {
                     if(QueBuff.getQuestionType() == 2)
                     {
                         Question AnsIndex = Answers.get(j);
-                        AnsIndex.setAnswer(AnsIndex.getAnswer()+"; "+QueBuff.getAnswer());
-                        Answers.set(j,AnsIndex);
+                        //AnsIndex.setAnswer("");
+                        if(QueBuff.getAnswer() != null)
+                        {
+                            AnsIndex.setAnswer(AnsIndex.getAnswer()+QueBuff.getAnswer()+"; ");
+                            Answers.set(j,AnsIndex);
+                        }
+
+
                     }
                 }
 
@@ -514,6 +535,8 @@ public class MissionController {
             Question Que = Answers.get(i);
             Que.setQuestionId(i+1);
             Que.setQuestionareId(0);
+            if(Que.getAnswer() == "")
+                Que.setAnswer(null);
             Ans.add(Que);
         }
         ReSum.put("questions",Ans);
