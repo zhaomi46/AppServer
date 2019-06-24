@@ -15,7 +15,6 @@ import java.util.UUID;
 public class ImageController {
     @RequestMapping(value="/images", method = RequestMethod.POST)
     @CrossOrigin
-    @Authorization
     public ResponseEntity<Object> uploadImg(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
             new ResponseEntity(new ReturnMsg("uploadimg fail"), HttpStatus.BAD_REQUEST);
