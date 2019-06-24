@@ -482,9 +482,9 @@ public class TaskController {
                     }
                 }
 
-                if(countChoiceNum > BuffQues.getChoicenum())
+                if(countChoiceNum > BuffQues.getChoiceNum())
                 {
-                    if(ansBuff.length() < BuffQues.getChoicenum())
+                    if(ansBuff.length() < BuffQues.getChoiceNum())
                     {
                         return new ResponseEntity(new ReturnMsg("Answer of Question"+BuffQues.getQuestionId()+" is not enough !"),HttpStatus.BAD_REQUEST);
                     }
