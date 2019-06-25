@@ -3,6 +3,7 @@ package com.zgl.swsad.controller;
 import com.alibaba.fastjson.JSONObject;
 import com.zgl.swsad.authorization.annotation.Authorization;
 import com.zgl.swsad.authorization.annotation.CurrentUser;
+import com.zgl.swsad.config.Constants;
 import com.zgl.swsad.model.*;
 import com.zgl.swsad.service.*;
 import com.zgl.swsad.util.ReturnMsg;
@@ -221,5 +222,24 @@ public class UserController {
 
 
         return new ResponseEntity(ReTask, HttpStatus.OK);
+    }
+
+
+    @CrossOrigin
+    @RequestMapping(value = "/test", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public Object testConnection( ){
+        User user = new User();
+        user.setName("ThisIsForTesting!");
+
+        int uId = userService.insertUser(user);
+        if(uId != Constants.INSERT_FAIL)
+        {
+            userService.deleteUser(uId);
+            return new ResponseEntity(new ReturnMsg("connect successfully"), HttpStatus.OK);
+        }
+        else
+        {
+            return new ResponseEntity(new ReturnMsg("connect fail"), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }
