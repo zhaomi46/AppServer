@@ -1,10 +1,7 @@
 package com.zgl.swsad.mapper;
 
 import com.zgl.swsad.model.User;
-import org.apache.ibatis.annotations.Delete;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.annotations.*;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.stereotype.Repository;
 
@@ -30,6 +27,7 @@ public interface UserMapper {
     @Insert("INSERT INTO user (userType,stuId, name, avator, nickName, age, sex, grade, major, mailAddr, phoneNum, creditVal, " +
             "balance, tags, password) Values(#{userType},#{stuId}, #{name}, #{avator}, #{nickName}, #{age}, #{sex}, #{grade}, #{major}, " +
             "#{mailAddr}, #{phoneNum}, 0, 0, #{tags}, #{password})")
+    @Options(useGeneratedKeys = true, keyProperty = "userId")
     int insertUser(User user);
 
     @Update("UPDATE user set userType=#{userType}, name=#{name}, avator=#{avator}, nickname=#{nickName}, age=#{age}," +
