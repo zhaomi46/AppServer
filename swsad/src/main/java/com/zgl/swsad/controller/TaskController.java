@@ -322,9 +322,9 @@ public class TaskController {
                         if(taskFromMission.get(k).getTaskStatus() == 3)
                             finishNum++;
                     }
-                    //finishNum;
-                    double aveMoney = BuffMission.getMoney()/(BuffMission.getTaskNum()-finishNum+1);
-                    BuffMission.setMoney(BuffMission.getMoney()-aveMoney);
+
+                    double aveMoney = BuffMission.getMoney()/BuffMission.getTaskNum();
+                    //BuffMission.setMoney(BuffMission.getMoney()-aveMoney);
                     User BuffUser = userService.selectUser(BuffTask.getAccUserId());
                     BuffUser.setBalance(BuffUser.getBalance()+aveMoney);
                     BuffUser.setCreditVal(BuffUser.getCreditVal()+1);
@@ -345,9 +345,9 @@ public class TaskController {
                     }
                     catch (Exception e)
                     {
-                        if(missionService.selectMission(BuffMission.getMissionId()).getMoney() == BuffMission.getMoney())
+                        if(finishNum == BuffMission.getTaskNum() && BuffMission.getMissionStatus() == 3)
                         {
-                            BuffMission.setMoney(BuffMission.getMoney()+aveMoney);
+                            //BuffMission.setMoney(BuffMission.getMoney()+aveMoney);
                             BuffMission.setMissionStatus(mStatus);
                             missionService.updateMission(BuffMission);
                         }
@@ -527,9 +527,9 @@ public class TaskController {
                 finishNum++;
         }
 
-        double aveMoney = BuffMission.getMoney()/(BuffMission.getTaskNum()-finishNum+1);
+        double aveMoney = BuffMission.getMoney()/BuffMission.getTaskNum();
 
-        BuffMission.setMoney(BuffMission.getMoney()-aveMoney);
+        //BuffMission.setMoney(BuffMission.getMoney()-aveMoney);
 
         User BuffUser = userService.selectUser(BuffTask.getAccUserId());
         BuffUser.setBalance(BuffUser.getBalance()+aveMoney);
@@ -552,9 +552,9 @@ public class TaskController {
         }
         catch (Exception e)
         {
-            if(missionService.selectMission(BuffMission.getMissionId()).getMoney() == BuffMission.getMoney())
+            if(finishNum == BuffMission.getTaskNum() && BuffMission.getMissionStatus() == 3)
             {
-                BuffMission.setMoney(BuffMission.getMoney()+aveMoney);
+                //BuffMission.setMoney(BuffMission.getMoney()+aveMoney);
                 BuffMission.setMissionStatus(mStatus);
                 missionService.updateMission(BuffMission);
             }

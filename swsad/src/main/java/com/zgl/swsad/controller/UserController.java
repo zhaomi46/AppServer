@@ -194,16 +194,16 @@ public class UserController {
             BuffJson.put("deadLine",BuffMission.getDeadLine());
             BuffJson.put("title",BuffMission.getTitle());
 
-            int finishNum = 0;
+            //int finishNum = 0;
             ArrayList<Task> taskFromMission = taskService.selectTaskByMissionId(BuffMission.getMissionId());
-            for(int j=0; j < taskFromMission.size();j++)
-            {
-                if(taskFromMission.get(j).getTaskStatus() == 3)
-                {
-                    finishNum++;
-                }
-            }
-            BuffJson.put("aveMoney",BuffMission.getMoney()/(BuffMission.getTaskNum()-finishNum));
+//            for(int j=0; j < taskFromMission.size();j++)
+//            {
+//                if(taskFromMission.get(j).getTaskStatus() == 3)
+//                {
+//                    finishNum++;
+//                }
+//            }
+            BuffJson.put("aveMoney",BuffMission.getMoney()/BuffMission.getTaskNum());
 
             if(tasks.get(i).getTaskType() == 0)
             {

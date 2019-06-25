@@ -581,14 +581,14 @@ public class MissionController {
                 }
             }
 
-            int finishNum = 0;
-            for(int k=0;k < TaskFromBuffMission.size();k++)
-            {
-                if(TaskFromBuffMission.get(k).getTaskStatus() == 3)
-                {
-                    finishNum++;
-                }
-            }
+//            int finishNum = 0;
+//            for(int k=0;k < TaskFromBuffMission.size();k++)
+//            {
+//                if(TaskFromBuffMission.get(k).getTaskStatus() == 3)
+//                {
+//                    finishNum++;
+//                }
+//            }
 
             Task BuffTask = TaskFromBuffMission.get(0);
 
@@ -611,7 +611,7 @@ public class MissionController {
 
             boolean myPubMission = (currentUser.getUserId() == BuffMission.getUserId());
             BuffJson.put("myPub",myPubMission);
-            BuffJson.put("aveMoney",BuffMission.getMoney()/(BuffMission.getTaskNum()-finishNum) );
+            BuffJson.put("aveMoney",BuffMission.getMoney()/BuffMission.getTaskNum() );
 
             if( !ReMissions.add(BuffJson))
             {
