@@ -564,6 +564,7 @@ public class MissionController {
             BuffJson.put("title",BuffMission.getTitle());
             BuffJson.put("publishTime",BuffMission.getPublishTime());
             BuffJson.put("deadLine",BuffMission.getDeadLine());
+            BuffJson.put("reportNum",BuffMission.getReportNum());
 
 
             ArrayList<Task> TaskFromBuffMission = taskService.selectTaskByMissionId(BuffMission.getMissionId());
@@ -721,7 +722,7 @@ public class MissionController {
         {
             return new ResponseEntity(new ReturnMsg("mission not found!"), HttpStatus.NOT_FOUND);
         }
-        
+
         BuffMission.setReportNum(BuffMission.getReportNum()+1);
 
         missionService.updateMission(BuffMission);
