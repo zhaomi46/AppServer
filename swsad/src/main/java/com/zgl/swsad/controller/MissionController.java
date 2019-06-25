@@ -711,6 +711,23 @@ public class MissionController {
         //return new ResponseEntity(new ReturnMsg("The mission has been accepted !"), HttpStatus.BAD_REQUEST);
     }
 
+    @CrossOrigin
+    @Authorization
+    @RequestMapping(value="/report/{missionId}", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public Object reportMission (@PathVariable int missionId,@RequestBody JSONObject param)  {
+        Mission BuffMission = missionService.selectMission(missionId);
+
+        if(BuffMission == null)
+        {
+            return new ResponseEntity(new ReturnMsg("mission not found!"), HttpStatus.NOT_FOUND);
+        }
+        
+        BuffMission.setReportNum(BuffMission.getReportNum()+1);
+
+        missionService.updateMission(BuffMission);
+        return new ResponseEntity(new ReturnMsg("report successfully !"), HttpStatus.OK);
+    }
+
 
 
 }
