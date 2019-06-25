@@ -565,6 +565,7 @@ public class MissionController {
             BuffJson.put("publishTime",BuffMission.getPublishTime());
             BuffJson.put("deadLine",BuffMission.getDeadLine());
             BuffJson.put("reportNum",BuffMission.getReportNum());
+            BuffJson.put("missionStatus",BuffMission.getMissionStatus());
 
 
             ArrayList<Task> TaskFromBuffMission = taskService.selectTaskByMissionId(BuffMission.getMissionId());
