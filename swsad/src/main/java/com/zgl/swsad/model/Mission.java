@@ -10,6 +10,15 @@ public class Mission {
     private Double money;
     private Integer userId;
     private Integer taskNum;
+    private Integer reportNum;
+
+    public Integer getReportNum() {
+        return reportNum;
+    }
+
+    public void setReportNum(Integer reportNum) {
+        this.reportNum = reportNum;
+    }
 
     public Integer getTaskNum() {
         return taskNum;
