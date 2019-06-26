@@ -194,6 +194,7 @@ public class UserController {
             BuffJson.put("publishTime",BuffMission.getPublishTime());
             BuffJson.put("deadLine",BuffMission.getDeadLine());
             BuffJson.put("title",BuffMission.getTitle());
+            BuffJson.put("reportNum",BuffMission.getReportNum());
 
             //int finishNum = 0;
             ArrayList<Task> taskFromMission = taskService.selectTaskByMissionId(BuffMission.getMissionId());
