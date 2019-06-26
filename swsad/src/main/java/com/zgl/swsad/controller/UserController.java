@@ -85,7 +85,7 @@ public class UserController {
             return new ResponseEntity(new ReturnMsg("userName existed"), HttpStatus.CONFLICT);
 
         int opNum = userService.insertUser(user);
-        if(opNum == 1)
+        if(opNum != Constants.INSERT_FAIL)
         {
             User currentUser = userService.selectUserByname(user.getName());
             return new ResponseEntity(currentUser, HttpStatus.CREATED);
