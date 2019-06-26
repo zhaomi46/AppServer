@@ -96,7 +96,7 @@
             "name": "authorization",
             "in": "header",
             "type": "string",
-            "description": "format is userId_token"
+            "description": "token"
           }
         ],
         "responses": {
@@ -130,7 +130,7 @@
             "name": "authorization",
             "in": "header",
             "type": "string",
-            "description": "format is userId_token"
+            "description": "token"
           },
           {
             "name": "oldPassword",
@@ -212,7 +212,7 @@
             "name": "authorization",
             "in": "header",
             "type": "string",
-            "description": "format is userId_token"
+            "description": "token"
           }
         ],
         "responses": {
@@ -251,7 +251,7 @@
             "name": "authorization",
             "in": "header",
             "type": "string",
-            "description": "format is userId_token"
+            "description": "token"
           }
         ],
         "responses": {
@@ -271,49 +271,6 @@
       }
     },
     "/missions": {
-      "post": {
-        "tags": [
-          "Mission"
-        ],
-        "summary": "create mission",
-        "description": "",
-        "produces": [
-          "application/json;chartset=uft-8"
-        ],
-        "consumes": [
-          "application/json;chartset=uft-8"
-        ],
-        "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "type": "string",
-            "description": "format is userId_token"
-          },
-          {
-            "in": "body",
-            "name": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/Mission"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "success create",
-            "schema": {
-              "$ref": "#/definitions/Mission"
-            }
-          },
-          "401": {
-            "description": "Invalid id/password supplied"
-          },
-          "404": {
-            "description": "User not found"
-          }
-        }
-      },
       "get": {
         "tags": [
           "Mission"
@@ -328,6 +285,127 @@
             "schema": {
               "$ref": "#/definitions/Missions"
             }
+          }
+        }
+      }
+    },
+    "/missions/AllMissions": {
+      "get": {
+        "tags": [
+          "Mission"
+        ],
+        "summary": "get all missions",
+        "description": "",
+        "produces": [
+          "application/json;chartset=uft-8"
+        ],
+        "consumes": [
+          "application/json;chartset=uft-8"
+        ],
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string",
+            "description": "token"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success get missions",
+            "schema": {
+              "$ref": "#/definitions/AllMissions"
+            }
+          }
+        }
+      }
+    },
+    "/missions/questionares": {
+      "post": {
+        "tags": [
+          "Mission"
+        ],
+        "summary": "create questionare mission",
+        "description": "",
+        "produces": [
+          "application/json;chartset=uft-8"
+        ],
+        "consumes": [
+          "application/json;chartset=uft-8"
+        ],
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string",
+            "description": "token"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/MissionQue"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success create",
+            "schema": {
+              "$ref": "#/definitions/Questionare"
+            }
+          },
+          "400": {
+            "description": "Invalid id/password supplied"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      }
+    },
+    "/missions/errands": {
+      "post": {
+        "tags": [
+          "Mission"
+        ],
+        "summary": "create errand mission",
+        "description": "",
+        "produces": [
+          "application/json;chartset=uft-8"
+        ],
+        "consumes": [
+          "application/json;chartset=uft-8"
+        ],
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string",
+            "description": "token"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/MissionErrand"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success create",
+            "schema": {
+              "$ref": "#/definitions/Errand"
+            }
+          },
+          "400": {
+            "description": "Invalid id/password supplied"
+          },
+          "404": {
+            "description": "User not found"
           }
         }
       }
@@ -360,82 +438,6 @@
             "description": "Invalid id supplied"
           }
         }
-      },
-      "put": {
-        "tags": [
-          "Mission"
-        ],
-        "summary": "modify mission by ID",
-        "consumes": [
-          "application/json;chartset=uft-8"
-        ],
-        "parameters": [
-          {
-            "name": "missionID",
-            "in": "path",
-            "required": true,
-            "type": "integer"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "type": "string",
-            "description": "format is userId_token"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/Mission"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "modify success"
-          },
-          "401": {
-            "description": "Invalid username/password supplied"
-          },
-          "404": {
-            "description": "mossion not found"
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Mission"
-        ],
-        "summary": "delete mission by ID",
-        "consumes": [
-          "application/json;chartset=uft-8"
-        ],
-        "parameters": [
-          {
-            "name": "missionID",
-            "in": "path",
-            "required": true,
-            "type": "integer"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "type": "string",
-            "description": "format is userId_token"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "delete success"
-          },
-          "401": {
-            "description": "Invalid username/password supplied"
-          },
-          "404": {
-            "description": "mossion not found"
-          }
-        }
       }
     },
     "/missions/{missionID}/tasks": {
@@ -458,7 +460,7 @@
             "name": "authorization",
             "in": "header",
             "type": "string",
-            "description": "format is userId_token"
+            "description": "token"
           }
         ],
         "responses": {
@@ -470,6 +472,81 @@
           },
           "401": {
             "description": "Invalid username/password supplied"
+          },
+          "404": {
+            "description": "mission not found"
+          }
+        }
+      }
+    },
+    "/missions/{missionID}/QAsummary": {
+      "get": {
+        "tags": [
+          "Mission"
+        ],
+        "summary": "summary of questionares",
+        "produces": [
+          "application/json;chartset=uft-8"
+        ],
+        "parameters": [
+          {
+            "name": "missionID",
+            "in": "path",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string",
+            "description": "token"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "get tasks success",
+            "schema": {
+              "$ref": "#/definitions/MissionQAsummary"
+            }
+          },
+          "403": {
+            "description": "questionare and missionId are not matched"
+          },
+          "404": {
+            "description": "mission not found"
+          }
+        }
+      }
+    },
+    "/missions/{missionID}/accept": {
+      "get": {
+        "tags": [
+          "Mission"
+        ],
+        "summary": "check the state of the mission by missionId",
+        "produces": [
+          "application/json;chartset=uft-8"
+        ],
+        "parameters": [
+          {
+            "name": "missionID",
+            "in": "path",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string",
+            "description": "token"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "accept successfully"
+          },
+          "400": {
+            "description": "mission overdue or compelte"
           },
           "404": {
             "description": "mission not found"
@@ -507,92 +584,49 @@
         }
       }
     },
-    "/tasks/questionares": {
+    "/tasks/{taskID}/QAsubmit": {
       "post": {
         "tags": [
           "Task"
         ],
-        "summary": "create questionare task",
-        "description": "",
+        "summary": "submit the questionare",
         "produces": [
-          "application/json;chartset=uft-8"
-        ],
-        "consumes": [
           "application/json;chartset=uft-8"
         ],
         "parameters": [
           {
+            "name": "taskID",
+            "in": "path",
+            "required": true,
+            "type": "integer"
+          },
+          {
             "name": "authorization",
             "in": "header",
             "type": "string",
-            "description": "format is userId_token"
+            "description": "token"
           },
           {
             "in": "body",
             "name": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/TaskQue"
+              "$ref": "#/definitions/QAsummary"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "success create",
-            "schema": {
-              "$ref": "#/definitions/Questionare"
-            }
+            "description": "Submit QA successfully"
           },
           "400": {
-            "description": "Invalid id/password supplied"
+            "description": "not your acc questionare <br> you have submited this questionare <br> question No.x not found <br> the number of questions and questionares are not matched <br> some of your questions are not belong to task No.x <br> answer of question No.x should be only 1 <br> answer of question No.x is not enough <br> answer of question No.x is null"
           },
           "404": {
-            "description": "User not found"
-          }
-        }
-      }
-    },
-    "/tasks/errands": {
-      "post": {
-        "tags": [
-          "Task"
-        ],
-        "summary": "create errand task",
-        "description": "",
-        "produces": [
-          "application/json;chartset=uft-8"
-        ],
-        "consumes": [
-          "application/json;chartset=uft-8"
-        ],
-        "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "type": "string",
-            "description": "format is userId_token"
+            "description": "task not found"
           },
-          {
-            "in": "body",
-            "name": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/TaskErrand"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "success create",
-            "schema": {
-              "$ref": "#/definitions/Errand"
-            }
-          },
-          "400": {
-            "description": "Invalid id/password supplied"
-          },
-          "404": {
-            "description": "User not found"
+          "500": {
+            "description": "server error"
           }
         }
       }
@@ -617,7 +651,7 @@
             "name": "authorization",
             "in": "header",
             "type": "string",
-            "description": "format is userId_token"
+            "description": "token"
           }
         ],
         "responses": {
@@ -626,82 +660,6 @@
             "schema": {
               "$ref": "#/definitions/Task"
             }
-          },
-          "401": {
-            "description": "Invalid username/password supplied"
-          },
-          "404": {
-            "description": "task not found"
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "Task"
-        ],
-        "summary": "modify a task",
-        "produces": [
-          "application/json;chartset=uft-8"
-        ],
-        "consumes": [
-          "application/json;chartset=uft-8"
-        ],
-        "parameters": [
-          {
-            "name": "taskID",
-            "in": "path",
-            "required": true,
-            "type": "integer"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "type": "string",
-            "description": "format is userId_token"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/Task"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "modify success"
-          },
-          "401": {
-            "description": "Invalid username/password supplied"
-          },
-          "404": {
-            "description": "task not found"
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Task"
-        ],
-        "summary": "delete task by ID",
-        "parameters": [
-          {
-            "name": "taskID",
-            "in": "path",
-            "required": true,
-            "type": "integer"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "type": "string",
-            "description": "format is userId_token"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "delete success"
           },
           "401": {
             "description": "Invalid username/password supplied"
@@ -732,7 +690,7 @@
             "name": "authorization",
             "in": "header",
             "type": "string",
-            "description": "format is userId_token"
+            "description": "token"
           }
         ],
         "responses": {
@@ -749,16 +707,15 @@
             "description": "task not found"
           }
         }
-      },
-      "put": {
+      }
+    },
+    "/tasks/{taskID}/finishErrand": {
+      "get": {
         "tags": [
           "Task"
         ],
-        "summary": "modify a questionare",
+        "summary": "check errand finished",
         "produces": [
-          "application/json;chartset=uft-8"
-        ],
-        "consumes": [
           "application/json;chartset=uft-8"
         ],
         "parameters": [
@@ -772,26 +729,21 @@
             "name": "authorization",
             "in": "header",
             "type": "string",
-            "description": "format is userId_token"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/Questionare"
-            }
+            "description": "token"
           }
         ],
         "responses": {
           "200": {
-            "description": "modify success"
+            "description": "errand task finished"
           },
-          "401": {
-            "description": "Invalid username/password supplied"
+          "400": {
+            "description": "errand task not be accepted"
           },
           "404": {
             "description": "task not found"
+          },
+          "500": {
+            "description": "server error"
           }
         }
       }
@@ -816,7 +768,7 @@
             "name": "authorization",
             "in": "header",
             "type": "string",
-            "description": "format is userId_token"
+            "description": "token"
           }
         ],
         "responses": {
@@ -825,51 +777,6 @@
             "schema": {
               "$ref": "#/definitions/Errand"
             }
-          },
-          "401": {
-            "description": "Invalid username/password supplied"
-          },
-          "404": {
-            "description": "task not found"
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "Task"
-        ],
-        "summary": "modify a errand",
-        "produces": [
-          "application/json;chartset=uft-8"
-        ],
-        "consumes": [
-          "application/json;chartset=uft-8"
-        ],
-        "parameters": [
-          {
-            "name": "taskID",
-            "in": "path",
-            "required": true,
-            "type": "integer"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "type": "string",
-            "description": "format is userId_token"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/Errand"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "modify success"
           },
           "401": {
             "description": "Invalid username/password supplied"
@@ -907,7 +814,7 @@
           "200": {
             "description": "login success",
             "schema": {
-              "$ref": "#/definitions/Token"
+              "$ref": "#/definitions/ReToken"
             }
           },
           "401": {
@@ -925,7 +832,7 @@
             "name": "authorization",
             "in": "header",
             "type": "string",
-            "description": "format is userId_token"
+            "description": "token"
           }
         ],
         "responses": {
@@ -955,7 +862,7 @@
             "name": "authorization",
             "in": "header",
             "type": "string",
-            "description": "format is userId_token"
+            "description": "token"
           },
           {
             "name": "file",
@@ -1017,6 +924,9 @@
           "type": "integer",
           "format": "int64"
         },
+        "stuId": {
+          "type": "integer"
+        },
         "name": {
           "type": "string"
         },
@@ -1065,10 +975,10 @@
         "missionId": {
           "type": "integer"
         },
-        "userID": {
+        "missionStatus": {
           "type": "integer"
         },
-        "missionStatus": {
+        "taskNum": {
           "type": "integer"
         },
         "publishTime": {
@@ -1097,6 +1007,106 @@
         "$ref": "#/definitions/Mission"
       }
     },
+    "AllMissions": {
+      "type": "object",
+      "properties": {
+        "MissionNum": {
+          "type": "integer"
+        },
+        "AllMissions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Mission_All"
+          }
+        }
+      }
+    },
+    "Mission_All": {
+      "type": "object",
+      "properties": {
+        "missionId": {
+          "type": "integer"
+        },
+        "title": {
+          "type": "string"
+        },
+        "publishTime": {
+          "type": "string"
+        },
+        "deadLine": {
+          "type": "string"
+        },
+        "taskType": {
+          "type": "integer"
+        },
+        "description": {
+          "type": "string"
+        },
+        "avator": {
+          "type": "string"
+        },
+        "myAccept": {
+          "type": "boolean"
+        },
+        "myPub": {
+          "type": "boolean"
+        },
+        "aveMoney": {
+          "type": "number"
+        }
+      }
+    },
+    "MissionQue": {
+      "type": "object",
+      "properties": {
+        "mission": {
+          "$ref": "#/definitions/Mission"
+        },
+        "task": {
+          "$ref": "#/definitions/Task"
+        },
+        "questionare": {
+          "$ref": "#/definitions/Questionare"
+        }
+      }
+    },
+    "MissionErrand": {
+      "type": "object",
+      "properties": {
+        "mission": {
+          "$ref": "#/definitions/Mission"
+        },
+        "task": {
+          "$ref": "#/definitions/Task"
+        },
+        "errand": {
+          "$ref": "#/definitions/Errand"
+        }
+      }
+    },
+    "MissionQAsummary": {
+      "type": "object",
+      "properties": {
+        "missionId": {
+          "type": "integer"
+        },
+        "taskNum": {
+          "type": "integer"
+        },
+        "finishNum": {
+          "type": "integer"
+        },
+        "QATitle": {
+          "type": "string"
+        },
+        "QADes": {
+          "type": "string"
+        },
+        "questions": {
+          "$ref": "#/definitions/Question"
+        }
+      }
+    },
     "Task": {
       "type": "object",
       "properties": {
@@ -1123,28 +1133,6 @@
         }
       }
     },
-    "TaskQue": {
-      "type": "object",
-      "properties": {
-        "task": {
-          "$ref": "#/definitions/Task"
-        },
-        "questionare": {
-          "$ref": "#/definitions/Questionare"
-        }
-      }
-    },
-    "TaskErrand": {
-      "type": "object",
-      "properties": {
-        "task": {
-          "$ref": "#/definitions/Task"
-        },
-        "errand": {
-          "$ref": "#/definitions/Errand"
-        }
-      }
-    },
     "Errand": {
       "type": "object",
       "properties": {
@@ -1156,6 +1144,34 @@
         },
         "taskId": {
           "type": "integer"
+        },
+        "privateInfo": {
+          "type": "string"
+        },
+        "pic": {
+          "type": "string"
+        }
+      }
+    },
+    "QAsummary": {
+      "type": "object",
+      "properties": {
+        "questions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/QA"
+          }
+        }
+      }
+    },
+    "QA": {
+      "type": "object",
+      "properties": {
+        "questionId": {
+          "type": "integer"
+        },
+        "answer": {
+          "type": "string"
         }
       }
     },
@@ -1171,7 +1187,13 @@
         "taskId": {
           "type": "integer"
         },
-        "quesitons": {
+        "description": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "questions": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/Question"
@@ -1211,11 +1233,11 @@
         "type": "integer"
       }
     },
-    "Token": {
+    "ReToken": {
       "type": "object",
       "properties": {
         "userId": {
-          "type": "string"
+          "type": "integer"
         },
         "token": {
           "type": "string"
