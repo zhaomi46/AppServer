@@ -1,7 +1,7 @@
 CREATE TABLE `user` (
 `userId`  int(11) NOT NULL AUTO_INCREMENT ,
 `userType`  int(11) NULL DEFAULT NULL ,
-`stuId`  int(11) NULL DEFAULT NULL ,
+`stuId`  varchar(32) NULL DEFAULT NULL ,
 `name`  varchar(32)  NULL DEFAULT NULL ,
 `avator`  varchar(128)  NULL DEFAULT NULL ,
 `nickName`  varchar(32)  NULL DEFAULT NULL ,
@@ -12,14 +12,15 @@ CREATE TABLE `user` (
 `mailAddr`  varchar(64)  NULL DEFAULT NULL ,
 `phoneNum`  varchar(32)  NULL DEFAULT NULL ,
 `creditVal`  int(11) NULL DEFAULT NULL ,
-`balance`  int(11) NULL DEFAULT NULL ,
+`balance`  double NULL DEFAULT NULL ,
 `tags`  varchar(255)  NULL DEFAULT NULL ,
 `password`  varchar(255) NULL DEFAULT NULL ,
 PRIMARY KEY (`userId`)
 )
 ENGINE=InnoDB
 ROW_FORMAT=DYNAMIC
-;
+default charset=utf8;
+
 
 CREATE TABLE `mission` (
 `missionId`  int(11) NOT NULL AUTO_INCREMENT ,
@@ -28,7 +29,7 @@ CREATE TABLE `mission` (
 `title`  varchar(64)  NULL DEFAULT NULL ,
 `deadLine`  varchar(32)  NULL DEFAULT NULL ,
 `tags`  varchar(255)  NULL DEFAULT NULL ,
-`money`  int(11) NULL DEFAULT NULL ,
+`money`  double NULL DEFAULT NULL ,
 `userId`  int(11) NULL DEFAULT NULL ,
 `taskNum`  int(11) NULL DEFAULT NULL ,
 PRIMARY KEY (`missionId`),
@@ -37,7 +38,7 @@ INDEX `mission_ibfk_1` (`userId`) USING BTREE
 )
 ENGINE=InnoDB
 ROW_FORMAT=DYNAMIC
-;
+default charset=utf8;
 
 CREATE TABLE `task` (
 `taskId`  int(11) NOT NULL AUTO_INCREMENT ,
@@ -58,7 +59,7 @@ INDEX `accUserId` (`accUserId`) USING BTREE
 ENGINE=InnoDB
 AUTO_INCREMENT=1
 ROW_FORMAT=DYNAMIC
-;
+default charset=utf8;
 
 CREATE TABLE `questionare` (
 `questionareId`  int(11) NOT NULL AUTO_INCREMENT ,
@@ -72,7 +73,7 @@ INDEX `taskId` (`taskId`) USING BTREE
 )
 ENGINE=InnoDB
 ROW_FORMAT=DYNAMIC
-;
+default charset=utf8;
 
 CREATE TABLE `errand` (
 `errandId`  int(11) NOT NULL AUTO_INCREMENT ,
@@ -86,7 +87,7 @@ INDEX `taskId` (`taskId`) USING BTREE
 )
 ENGINE=InnoDB
 ROW_FORMAT=DYNAMIC
-;
+default charset=utf8;
 
 CREATE TABLE `question` (
 `questionId`  int(11) NOT NULL AUTO_INCREMENT ,
@@ -102,7 +103,7 @@ INDEX `questionareId` (`questionareId`) USING BTREE
 )
 ENGINE=InnoDB
 ROW_FORMAT=DYNAMIC
-;
+default charset=utf8;
 
 CREATE TABLE `report` (
 `reportId`  int(11) NOT NULL AUTO_INCREMENT ,
@@ -119,7 +120,7 @@ INDEX `report_ibfk_2` (`missionId`) USING BTREE
 )
 ENGINE=InnoDB
 ROW_FORMAT=DYNAMIC
-;
+default charset=utf8;
 
 CREATE TABLE `judge` (
 `judgeId`  int(11) NOT NULL AUTO_INCREMENT ,
@@ -140,7 +141,7 @@ INDEX `accUserId` (`accUserId`) USING BTREE
 )
 ENGINE=InnoDB
 ROW_FORMAT=DYNAMIC
-;
+default charset=utf8;
 
 
 

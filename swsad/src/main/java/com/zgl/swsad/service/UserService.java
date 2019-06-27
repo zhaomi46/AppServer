@@ -2,6 +2,7 @@ package com.zgl.swsad.service;
 
 
 import com.zgl.swsad.authorization.annotation.Authorization;
+import com.zgl.swsad.config.Constants;
 import com.zgl.swsad.mapper.UserMapper;
 import com.zgl.swsad.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +32,9 @@ public class UserService {
 
     //创建用户
     public int insertUser(User user){
-        return userMapper.insertUser(user);
+
+        int reNum = userMapper.insertUser(user);
+        return reNum == 0 ? Constants.INSERT_FAIL : user.getUserId();
     }
 
     //修改用户

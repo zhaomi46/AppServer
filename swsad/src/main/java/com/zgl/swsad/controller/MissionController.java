@@ -62,6 +62,12 @@ public class MissionController {
 
             Mission mission = (Mission) JSONObject.toJavaObject(mission_json, Mission.class);
 
+            if(currentUser.getBalance()-mission.getMoney() < 0)
+            {
+                //missionService.deleteMission(missionId);
+                return new ResponseEntity(new ReturnMsg("Your balance is not enough!"), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
             //检测deadline在publishtime之后
             String strDeadline = mission.getDeadLine();
             SimpleDateFormat sdf= new SimpleDateFormat("yyyy-MM-dd");
@@ -180,11 +186,7 @@ public class MissionController {
         }
 
         User user = userService.selectUser(mission.getUserId());
-        if(user.getBalance()-mission.getMoney() < 0)
-        {
-            missionService.deleteMission(missionId);
-            return new ResponseEntity(new ReturnMsg("Your balance is not enough!"), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+
         userService.updateBnC(user.getUserId(),user.getBalance()-mission.getMoney(),user.getCreditVal()+1);
         return new ResponseEntity(new ReturnMsg("create task successfully!"), HttpStatus.OK);
 
@@ -241,6 +243,12 @@ public class MissionController {
 
         Mission mission = (Mission)JSONObject.toJavaObject(mission_json,Mission.class);
 
+        if(currentUser.getBalance()-mission.getMoney() < 0)
+        {
+            //missionService.deleteMission(missionId);
+            return new ResponseEntity(new ReturnMsg("Your balance is not enough!"), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
         //检测deadline在publishtime之后
         String strDeadline = mission.getDeadLine();
         SimpleDateFormat sdf= new SimpleDateFormat("yyyy-MM-dd");
@@ -267,9 +275,9 @@ public class MissionController {
 
         try {
             int loopTime = (int) mission_json.get("taskNum");
-            if(loopTime <= 0){
+            if(loopTime != 1){
                 missionService.deleteMission(missionId);
-                return new ResponseEntity(new ReturnMsg("taskNum should be greater than 0 !"), HttpStatus.BAD_REQUEST);
+                return new ResponseEntity(new ReturnMsg("taskNum should be 1 !"), HttpStatus.BAD_REQUEST);
             }
 
             for(int count = 0; count < loopTime;count++) {
@@ -314,11 +322,7 @@ public class MissionController {
 
 
         User user = userService.selectUser(mission.getUserId());
-        if(user.getBalance()-mission.getMoney() < 0)
-        {
-            missionService.deleteMission(missionId);
-            return new ResponseEntity(new ReturnMsg("Your balance is not enough!"), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+
         userService.updateBnC(user.getUserId(),user.getBalance()-mission.getMoney(),user.getCreditVal()+1);
         return new ResponseEntity(new ReturnMsg("create task successfully!"), HttpStatus.OK);
 
@@ -471,13 +475,18 @@ public class MissionController {
         }
         ArrayList<Question> Answers = questionService.selectQuestionByQuestionareID(QuesList.get(0).getQuestionareId());
 
+        for(int i=0; i < Answers.size();i++)
+        {
+            Answers.get(i).setAnswer("");
+        }
+
         //初始化格式
         ReSum.put("QATitle",QuesList.get(0).getTitle());
         ReSum.put("QADes",QuesList.get(0).getDescription());
 
         if(QuesList != null)
         {
-            for(int i=1; i < QuesList.size();i++)
+            for(int i=0; i < QuesList.size();i++)
             {
                 Questionare Ques = QuesList.get(i);
 
@@ -489,8 +498,14 @@ public class MissionController {
                     if(QueBuff.getQuestionType() == 0 || QueBuff.getQuestionType() == 1)
                     {
                         Question AnsIndex = Answers.get(j);
-                        AnsIndex.setAnswer(AnsIndex.getAnswer()+QueBuff.getAnswer());
-                        Answers.set(j,AnsIndex);
+                        //AnsIndex.setAnswer("");
+                        //System.out.println("ans"+AnsIndex.getAnswer()+" QueBuff"+QueBuff.getAnswer());
+                        if(QueBuff.getAnswer() != null)
+                        {
+                            AnsIndex.setAnswer(AnsIndex.getAnswer()+QueBuff.getAnswer());
+                            Answers.set(j,AnsIndex);
+                        }
+
                     }
 
 
@@ -498,8 +513,14 @@ public class MissionController {
                     if(QueBuff.getQuestionType() == 2)
                     {
                         Question AnsIndex = Answers.get(j);
-                        AnsIndex.setAnswer(AnsIndex.getAnswer()+"; "+QueBuff.getAnswer());
-                        Answers.set(j,AnsIndex);
+                        //AnsIndex.setAnswer("");
+                        if(QueBuff.getAnswer() != null)
+                        {
+                            AnsIndex.setAnswer(AnsIndex.getAnswer()+QueBuff.getAnswer()+"; ");
+                            Answers.set(j,AnsIndex);
+                        }
+
+
                     }
                 }
 
@@ -514,6 +535,8 @@ public class MissionController {
             Question Que = Answers.get(i);
             Que.setQuestionId(i+1);
             Que.setQuestionareId(0);
+            if(Que.getAnswer() == "")
+                Que.setAnswer(null);
             Ans.add(Que);
         }
         ReSum.put("questions",Ans);
@@ -526,7 +549,7 @@ public class MissionController {
     @CrossOrigin
     @Authorization
     @RequestMapping(value="/missions/AllMissions", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public Object GetAllMissions(@CurrentUser User currentUser) {
+    public Object GetAllMissions(@CurrentUser User currentUser) throws ParseException {
         ArrayList<Mission> AllMissions = missionService.selectAllMissions();
         //System.out.println("missions"+AllMissions.size());
         ArrayList<JSONObject> ReMissions = new ArrayList();
@@ -536,11 +559,35 @@ public class MissionController {
         {
 
             Mission BuffMission = AllMissions.get(i);
+
+            Calendar calendar = Calendar.getInstance();
+            String  strNow = calendar.get(Calendar.YEAR)+"-"+(calendar.get(Calendar.MONTH)+1)+"-"+calendar.get(Calendar.DAY_OF_MONTH);
+            String strDeadline = BuffMission.getDeadLine();
+            SimpleDateFormat sdf= new SimpleDateFormat("yyyy-MM-dd");
+            Date dateDeadline =sdf.parse(strDeadline);
+            Date dataNow = sdf.parse(strNow);
+            Calendar calDeadLine = Calendar.getInstance();
+            Calendar calNow = Calendar.getInstance();
+            calDeadLine.setTime(dateDeadline);
+            calNow.setTime(dataNow);
+            //检测是否任务已过期
+            boolean validMission = (calDeadLine.equals(calNow) || calDeadLine.after(calNow));
+            //System.out.println(calDeadLine+"xxx"+calendar);
+            if(!validMission)
+            {
+                BuffMission.setMissionStatus(2);
+                missionService.updateMission(BuffMission);
+            }
+            
+            
             JSONObject BuffJson = new JSONObject(new LinkedHashMap());
             BuffJson.put("missionId",BuffMission.getMissionId());
             BuffJson.put("title",BuffMission.getTitle());
             BuffJson.put("publishTime",BuffMission.getPublishTime());
             BuffJson.put("deadLine",BuffMission.getDeadLine());
+            BuffJson.put("reportNum",BuffMission.getReportNum());
+            BuffJson.put("missionStatus",BuffMission.getMissionStatus());
+            BuffJson.put("tags",BuffMission.getTags());
 
 
             ArrayList<Task> TaskFromBuffMission = taskService.selectTaskByMissionId(BuffMission.getMissionId());
@@ -558,14 +605,14 @@ public class MissionController {
                 }
             }
 
-            int finishNum = 0;
-            for(int k=0;k < TaskFromBuffMission.size();k++)
-            {
-                if(TaskFromBuffMission.get(k).getTaskStatus() == 3)
-                {
-                    finishNum++;
-                }
-            }
+//            int finishNum = 0;
+//            for(int k=0;k < TaskFromBuffMission.size();k++)
+//            {
+//                if(TaskFromBuffMission.get(k).getTaskStatus() == 3)
+//                {
+//                    finishNum++;
+//                }
+//            }
 
             Task BuffTask = TaskFromBuffMission.get(0);
 
@@ -588,7 +635,7 @@ public class MissionController {
 
             boolean myPubMission = (currentUser.getUserId() == BuffMission.getUserId());
             BuffJson.put("myPub",myPubMission);
-            BuffJson.put("aveMoney",BuffMission.getMoney()/(BuffMission.getTaskNum()-finishNum) );
+            BuffJson.put("aveMoney",BuffMission.getMoney()/BuffMission.getTaskNum() );
 
             if( !ReMissions.add(BuffJson))
             {
@@ -606,7 +653,7 @@ public class MissionController {
     }
 
 
-    //通过taskId接受任务
+    //通过missionId接受任务
     @CrossOrigin
     @Authorization
     @RequestMapping(value="/missions/{missionId}/accept", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -618,6 +665,12 @@ public class MissionController {
         }
 
         Mission mission = missionService.selectMission(missionId);
+
+        if(mission.getUserId() == currentUser.getUserId())
+        {
+            return new ResponseEntity(new ReturnMsg("You can't accept your published task!"), HttpStatus.BAD_REQUEST);
+        }
+        
         if(mission == null)
         {
             return new ResponseEntity(new ReturnMsg("The mission doesn't exist !"), HttpStatus.NOT_FOUND);
@@ -680,6 +733,23 @@ public class MissionController {
 
 
         //return new ResponseEntity(new ReturnMsg("The mission has been accepted !"), HttpStatus.BAD_REQUEST);
+    }
+
+    @CrossOrigin
+    @Authorization
+    @RequestMapping(value="/report/{missionId}", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public Object reportMission (@PathVariable int missionId,@RequestBody JSONObject param)  {
+        Mission BuffMission = missionService.selectMission(missionId);
+
+        if(BuffMission == null)
+        {
+            return new ResponseEntity(new ReturnMsg("mission not found!"), HttpStatus.NOT_FOUND);
+        }
+
+        BuffMission.setReportNum(BuffMission.getReportNum()+1);
+
+        missionService.updateMission(BuffMission);
+        return new ResponseEntity(new ReturnMsg("report successfully !"), HttpStatus.OK);
     }
 
 
