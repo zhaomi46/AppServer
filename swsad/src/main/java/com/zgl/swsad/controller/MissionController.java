@@ -275,9 +275,9 @@ public class MissionController {
 
         try {
             int loopTime = (int) mission_json.get("taskNum");
-            if(loopTime <= 0){
+            if(loopTime != 1){
                 missionService.deleteMission(missionId);
-                return new ResponseEntity(new ReturnMsg("taskNum should be greater than 0 !"), HttpStatus.BAD_REQUEST);
+                return new ResponseEntity(new ReturnMsg("taskNum should be 1 !"), HttpStatus.BAD_REQUEST);
             }
 
             for(int count = 0; count < loopTime;count++) {
