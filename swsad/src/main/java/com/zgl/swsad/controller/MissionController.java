@@ -549,7 +549,7 @@ public class MissionController {
     @CrossOrigin
     @Authorization
     @RequestMapping(value="/missions/AllMissions", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public Object GetAllMissions(@CurrentUser User currentUser) {
+    public Object GetAllMissions(@CurrentUser User currentUser) throws ParseException {
         ArrayList<Mission> AllMissions = missionService.selectAllMissions();
         //System.out.println("missions"+AllMissions.size());
         ArrayList<JSONObject> ReMissions = new ArrayList();
@@ -559,7 +559,6 @@ public class MissionController {
         {
 
             Mission BuffMission = AllMissions.get(i);
-
 
             Calendar calendar = Calendar.getInstance();
             String  strNow = calendar.get(Calendar.YEAR)+"-"+(calendar.get(Calendar.MONTH)+1)+"-"+calendar.get(Calendar.DAY_OF_MONTH);
@@ -579,7 +578,8 @@ public class MissionController {
                 BuffMission.setMissionStatus(2);
                 missionService.updateMission(BuffMission);
             }
-
+            
+            
             JSONObject BuffJson = new JSONObject(new LinkedHashMap());
             BuffJson.put("missionId",BuffMission.getMissionId());
             BuffJson.put("title",BuffMission.getTitle());
@@ -588,6 +588,7 @@ public class MissionController {
             BuffJson.put("reportNum",BuffMission.getReportNum());
             BuffJson.put("missionStatus",BuffMission.getMissionStatus());
             BuffJson.put("tags",BuffMission.getTags());
+
 
             ArrayList<Task> TaskFromBuffMission = taskService.selectTaskByMissionId(BuffMission.getMissionId());
             if(TaskFromBuffMission == null)
